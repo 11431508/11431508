@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3x3 數字推盤 - 煙火慶典版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
+        :root {
+            --bg-gradient: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+            --btn-gradient: linear-gradient(to bottom right, #fff1f2, #fecdd3);
+            --accent-color: #be123c;
+            --text-color: #475569;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            overflow: hidden;
+            background: var(--bg-gradient);
+            transition: background 0.8s ease;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(25px);
+            padding: 2rem;
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.04);
+            z-index: 10;
+            width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.04);
+            padding: 12px;
+            border-radius: 1.5rem;
+            width: 100%;
+            aspect-ratio: 1/1;
+        }
+
+        .tile {
+            background: white;
+            color: #334155;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.06);
+            user-select: none;
+        }
+
+        .tile:hover:not(.empty) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .tile:active:not(.empty) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .tile.empty {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.01);
+            cursor: default;
+        }
+
+        .tile.moving-auto {
+            background: #f0fdf4;
+            color: #166534;
+            border: 3px solid #bbf7d0;
+        }
+
+        .dynamic-btn {
+            background: var(--btn-gradient);
+            color: var(--text-color);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .dynamic-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.06);
+        }
+        .dynamic-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        canvas#fireworks-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .theme-dot {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .theme-dot.active { 
+            transform: scale(1.35); 
+            box-shadow: 0 0 0 2px white, 0 0 0 4px var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="fireworks-canvas"></canvas>
+
+    <div class="main-card flex flex-col items-center">
+        <!-- 色彩主題選擇器 (依光譜順序排列：紅橙黃綠藍紫) -->
+        <div class="flex gap-3 mb-6 p-2 bg-white/60 rounded-full shadow-inner border border-white">
+            <div class="theme-dot active" style="background: linear-gradient(135deg, #fff1f2, #ffe4e6);" onclick="updateTheme('red')"></div>
+            <div class="theme-dot" style="background: linear-gradient(135deg, #fffaf5, #ffedd5);" onclick="updateTheme('orange')"></div>
+            <div class="theme-dot" style="background: linear-gradient(135deg, #fefce8, #fef9c3);" onclick="updateTheme('yellow')"></div>
+            <div class="theme-dot" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);" onclick="updateTheme('green')"></div>
+            <div class="theme-dot" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe);" onclick="updateTheme('blue')"></div>
+            <div class="theme-dot" style="background: linear-gradient(135deg, #fdf4ff, #fae8ff);" onclick="updateTheme('purple')"></div>
+        </div>
+
+        <header class="text-center mb-6">
+            <h1 class="text-2xl font-black text-slate-600 tracking-[0.2em] uppercase">Firework Puzzle</h1>
+        </header>
+
+        <div class="flex w-full gap-3 mb-6">
+            <div class="flex-1 flex flex-col items-center bg-white/50 rounded-2xl py-3 border border-white">
+                <span class="text-slate-400 text-[10px] font-black uppercase tracking-widest">目前步數</span>
+                <span id="move-count" class="text-2xl font-black text-slate-600">0</span>
+            </div>
+            <div class="flex-1 flex flex-col items-center bg-white/50 rounded-2xl py-3 border border-white">
+                <span class="text-slate-400 text-[10px] font-black uppercase tracking-widest">初始最佳</span>
+                <span id="best-count" class="text-2xl font-black text-slate-600">--</span>
+            </div>
+        </div>
+
+        <div id="grid" class="puzzle-grid"></div>
+
+        <div class="grid grid-cols-2 gap-3 w-full mt-6">
+            <button id="retry-btn" class="dynamic-btn py-3 rounded-xl font-bold">重新挑戰</button>
+            <button id="solve-btn" class="dynamic-btn py-3 rounded-xl font-bold">最優解演示</button>
+            <button id="undo-btn" class="dynamic-btn py-3 rounded-xl font-bold">上一步</button>
+            <button id="new-game-btn" class="dynamic-btn py-3 rounded-xl font-black">新遊戲</button>
+        </div>
+    </div>
+
+    <!-- 勝利視窗 (將原本彩虹圖示改為煙火) -->
+    <div id="win-modal" class="fixed inset-0 bg-slate-900/30 backdrop-blur-md hidden items-center justify-center z-[100] p-6">
+        <div class="bg-white/95 rounded-[3rem] p-10 max-w-sm w-full text-center shadow-2xl border border-white">
+            <div class="text-7xl mb-4">🎆</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">挑戰成功！</h2>
+            <p id="win-message" class="text-slate-500 mb-8 whitespace-pre-line leading-relaxed"></p>
+            <div class="flex flex-col gap-3">
+                <button id="modal-new-game" class="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-lg shadow-xl hover:bg-black transition">再玩一局</button>
+                <button id="modal-retry" class="w-full py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition">重新挑戰此局</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GOAL = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+        let tiles = [...GOAL];
+        let initialLayout = [...GOAL];
+        let moveCount = 0;
+        let history = [];
+        let initialBest = 0;
+        let isSolving = false;
+
+        const themes = {
+            red: { bg: 'linear-gradient(135deg, #fff1f2, #ffe4e6)', btn: 'linear-gradient(to bottom right, #fff1f2, #fecdd3)', accent: '#be123c' },
+            orange: { bg: 'linear-gradient(135deg, #fffaf5, #ffedd5)', btn: 'linear-gradient(to bottom right, #fffaf5, #fed7aa)', accent: '#c2410c' },
+            yellow: { bg: 'linear-gradient(135deg, #fefce8, #fef9c3)', btn: 'linear-gradient(to bottom right, #fefce8, #fde68a)', accent: '#a16207' },
+            green: { bg: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', btn: 'linear-gradient(to bottom right, #f0fdf4, #bbf7d0)', accent: '#15803d' },
+            blue: { bg: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)', btn: 'linear-gradient(to bottom right, #f0f9ff, #bae6fd)', accent: '#0369a1' },
+            purple: { bg: 'linear-gradient(135deg, #fdf4ff, #fae8ff)', btn: 'linear-gradient(to bottom right, #fdf4ff, #f5d0fe)', accent: '#701a75' }
+        };
+
+        function updateTheme(key) {
+            const t = themes[key];
+            document.documentElement.style.setProperty('--bg-gradient', t.bg);
+            document.documentElement.style.setProperty('--btn-gradient', t.btn);
+            document.documentElement.style.setProperty('--accent-color', t.accent);
+            document.querySelectorAll('.theme-dot').forEach((dot, idx) => {
+                dot.classList.toggle('active', Object.keys(themes)[idx] === key);
+            });
+        }
+
+        // --- 核心演算 ---
+        function getManhattan(arr) {
+            let d = 0;
+            for(let i=0; i<9; i++) {
+                if(arr[i] !== 0) {
+                    const target = arr[i]-1;
+                    d += Math.abs(Math.floor(i/3)-Math.floor(target/3)) + Math.abs((i%3)-(target%3));
+                }
+            }
+            return d;
+        }
+
+        function findSolution(state) {
+            let h = getManhattan(state);
+            if(h === 0) return [];
+            let threshold = h;
+            while(threshold < 35) {
+                let path = [];
+                let res = idaSearch(state, 0, threshold, -1, path);
+                if(res === 'FOUND') return path;
+                threshold = res;
+            }
+            return null;
+        }
+
+        function idaSearch(state, g, threshold, last, path) {
+            let h = getManhattan(state);
+            let f = g + h;
+            if(f > threshold) return f;
+            if(h === 0) return 'FOUND';
+            let min = Infinity;
+            let z = state.indexOf(0);
+            let r = Math.floor(z/3), c = z%3;
+            let adj = [];
+            if(r>0) adj.push(z-3); if(r<2) adj.push(z+3);
+            if(c>0) adj.push(z-1); if(c<2) adj.push(z+1);
+            for(let next of adj) {
+                if(next === last) continue;
+                let nextS = [...state];
+                [nextS[z], nextS[next]] = [nextS[next], nextS[z]];
+                path.push(next);
+                let t = idaSearch(nextS, g+1, threshold, z, path);
+                if(t === 'FOUND') return 'FOUND';
+                path.pop();
+                if(t < min) min = t;
+            }
+            return min;
+        }
+
+        async function runAutoSolve() {
+            if(isSolving || getManhattan(tiles) === 0) return;
+            isSolving = true;
+            document.getElementById('solve-btn').disabled = true;
+            const path = findSolution(tiles);
+            if(!path) { isSolving = false; document.getElementById('solve-btn').disabled = false; return; }
+            for(let nextIdx of path) {
+                if(!isSolving) break;
+                await new Promise(r => setTimeout(r, 260));
+                const z = tiles.indexOf(0);
+                history.push([...tiles]);
+                [tiles[nextIdx], tiles[z]] = [tiles[z], tiles[nextIdx]];
+                moveCount++;
+                render(nextIdx);
+                if(getManhattan(tiles) === 0) { triggerWin(); break; }
+            }
+            isSolving = false;
+            document.getElementById('solve-btn').disabled = false;
+        }
+
+        function render(hi = -1) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            tiles.forEach((v, i) => {
+                const d = document.createElement('div');
+                d.className = `tile ${v === 0 ? 'empty' : ''} ${i === hi ? 'moving-auto' : ''}`;
+                if(v !== 0) {
+                    d.textContent = v;
+                    d.onclick = () => { if(!isSolving) move(i); };
+                }
+                grid.appendChild(d);
+            });
+            document.getElementById('move-count').textContent = moveCount;
+            document.getElementById('undo-btn').disabled = history.length === 0 || isSolving;
+        }
+
+        function move(idx) {
+            const z = tiles.indexOf(0);
+            if(Math.abs(Math.floor(idx/3)-Math.floor(z/3)) + Math.abs(idx%3-z%3) === 1) {
+                history.push([...tiles]);
+                [tiles[idx], tiles[z]] = [tiles[z], tiles[idx]];
+                moveCount++;
+                render();
+                if(getManhattan(tiles) === 0) triggerWin();
+            }
+        }
+
+        function startNewGame() {
+            isSolving = false;
+            tiles = [...GOAL];
+            let z = 8;
+            for(let i=0; i<120; i++) {
+                let r=Math.floor(z/3), c=z%3, adj=[];
+                if(r>0)adj.push(z-3);if(r<2)adj.push(z+3);if(c>0)adj.push(z-1);if(c<2)adj.push(z+1);
+                let n=adj[Math.floor(Math.random()*adj.length)];
+                [tiles[n],tiles[z]]=[tiles[z],tiles[n]]; z=n;
+            }
+            if(getManhattan(tiles) === 0) return startNewGame();
+            initialLayout = [...tiles];
+            const p = findSolution(tiles);
+            initialBest = p ? p.length : "--";
+            document.getElementById('best-count').textContent = initialBest;
+            moveCount = 0; history = [];
+            render();
+            hideWinModal();
+        }
+
+        function retryGame() {
+            isSolving = false;
+            tiles = [...initialLayout];
+            moveCount = 0; history = [];
+            render();
+            hideWinModal();
+        }
+
+        // --- 煙火特效控制 ---
+        const canvas = document.getElementById('fireworks-canvas');
+        const ctx = canvas.getContext('2d');
+        let ps = []; let fs = []; let aid;
+
+        function triggerWin() {
+            document.getElementById('win-message').textContent = `最佳成績：${initialBest} 步\n您的移動：${moveCount} 步`;
+            document.getElementById('win-modal').classList.remove('hidden');
+            document.getElementById('win-modal').classList.add('flex');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            if(!aid) loop();
+        }
+
+        function loop() {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; // 軌跡留白
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            
+            // 隨機發射煙火
+            if(Math.random() < 0.1) {
+                fs.push({
+                    x: Math.random() * canvas.width, 
+                    y: canvas.height, 
+                    ty: Math.random() * canvas.height * 0.5, 
+                    h: Math.random() * 360, 
+                    d: false
+                });
+            }
+            
+            // 更新煙火主體
+            fs.forEach((f,i) => {
+                f.y -= 8; 
+                if(f.y <= f.ty) {
+                    f.d = true; 
+                    for(let j=0; j<80; j++) {
+                        let ang = Math.random() * 6.28, s = Math.random() * 7 + 2;
+                        ps.push({
+                            x: f.x, 
+                            y: f.y, 
+                            vx: Math.cos(ang) * s, 
+                            vy: Math.sin(ang) * s, 
+                            a: 1, 
+                            h: f.h 
+                        });
+                    }
+                }
+                ctx.fillStyle = `hsl(${f.h}, 100%, 50%)`;
+                ctx.beginPath(); ctx.arc(f.x, f.y, 2.5, 0, 7); ctx.fill();
+                if(f.d) fs.splice(i,1);
+            });
+            
+            // 更新粒子
+            ps.forEach((p,i) => {
+                p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.a -= 0.012;
+                ctx.globalAlpha = p.a; 
+                ctx.fillStyle = `hsl(${p.h}, 100%, 60%)`;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, 7); ctx.fill();
+                if(p.a <= 0) ps.splice(i,1);
+            });
+            
+            aid = requestAnimationFrame(loop);
+        }
+
+        function hideWinModal() {
+            document.getElementById('win-modal').classList.add('hidden');
+            cancelAnimationFrame(aid); aid = null;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ps = []; fs = [];
+        }
+
+        // 事件綁定
+        document.getElementById('new-game-btn').onclick = startNewGame;
+        document.getElementById('retry-btn').onclick = retryGame;
+        document.getElementById('solve-btn').onclick = runAutoSolve;
+        document.getElementById('undo-btn').onclick = () => { if(history.length > 0){ tiles = history.pop(); moveCount--; render(); }};
+        document.getElementById('modal-new-game').onclick = startNewGame;
+        document.getElementById('modal-retry').onclick = retryGame;
+
+        window.onload = () => { startNewGame(); updateTheme('red'); };
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    </script>
+</body>
+</html>

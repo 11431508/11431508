@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Master V18 - Ultimate Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Roboto+Mono:wght@500&family=Bebas+Neue&family=Ma+Shan+Zheng&family=Zhi+Mang+Xing&family=ZCOOL+XiaoWei&family=Permanent+Marker&family=Dancing+Script&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #09090b;
+            --panel: #18181b;
+            --accent: #fbbf24;
+            --text: #f4f4f5;
+            --border: #27272a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 側邊欄 */
+        .sidebar {
+            width: 420px;
+            background-color: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); background: #111; }
+        .sidebar-header h1 { font-size: 1rem; color: var(--accent); font-weight: 800; text-align: center; letter-spacing: 3px; }
+
+        .tabs {
+            display: grid; grid-template-columns: repeat(5, 1fr);
+            background: #000; padding: 4px; margin: 10px; border-radius: 8px;
+        }
+        .tab-btn {
+            padding: 10px 0; border: none; background: transparent;
+            color: #71717a; font-size: 0.7rem; cursor: pointer;
+            border-radius: 5px; transition: 0.2s;
+        }
+        .tab-btn.active { background: var(--accent); color: #000; font-weight: bold; }
+
+        .scroll-area { flex: 1; padding: 0 1.2rem 2rem; overflow-y: auto; scrollbar-width: thin; }
+        .pane { display: none; }
+        .pane.active { display: block; }
+
+        /* 控制項樣式 */
+        .label { font-size: 0.75rem; color: var(--accent); margin: 1.5rem 0 0.6rem; display: block; font-weight: 700; border-left: 3px solid var(--accent); padding-left: 8px; }
+        .ctrl { margin-bottom: 1rem; }
+        .ctrl-head { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.5rem; color: #a1a1aa; }
+        .ctrl-val { color: var(--accent); font-weight: 600; font-family: 'Roboto Mono', monospace; }
+        
+        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; height: 6px; background: #333; border-radius: 3px; appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: white; border-radius: 50%; border: 2px solid var(--accent); }
+
+        input[type="text"], input[type="number"], select { 
+            width: 100%; background: #09090b; border: 1px solid var(--border); 
+            padding: 10px; color: white; border-radius: 6px; font-size: 0.85rem; margin-bottom: 8px;
+        }
+        input[type="color"] { width: 100%; height: 40px; border: 1px solid var(--border); background: transparent; cursor: pointer; border-radius: 6px; }
+
+        .btn {
+            background-color: var(--accent); color: #000; border: none;
+            padding: 0.9rem; border-radius: 8px; cursor: pointer; width: 100%;
+            font-size: 0.9rem; font-weight: 700; margin-bottom: 0.8rem; transition: 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: #a1a1aa; font-size: 0.8rem; padding: 10px; border-radius: 6px; cursor: pointer;}
+        .btn-outline.active { border-color: var(--accent); background: rgba(251, 191, 36, 0.1); color: var(--accent); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+        /* 主視圖區域 */
+        .stage { flex: 1; display: flex; flex-direction: column; background: #050507; position: relative; overflow: hidden; }
+        .top-bar {
+            height: 60px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 2rem;
+            background: #111;
+        }
+
+        .viewport {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            overflow: auto; position: relative;
+            background-image: 
+                radial-gradient(circle, #1a1a1e 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            transform-origin: center center;
+            transition: transform 0.05s ease-out;
+        }
+
+        canvas { display: block; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+        #fileInput { display: none; }
+        
+        .text-item-card {
+            background: #27272a; border-radius: 10px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header"><h1>IMAGE MASTER V18</h1></div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="setPane('adj')">影像</button>
+            <button class="tab-btn" onclick="setPane('clr')">色彩</button>
+            <button class="tab-btn" onclick="setPane('shp')">外框</button>
+            <button class="tab-btn" onclick="setPane('txt')">文字</button>
+            <button class="tab-btn" onclick="setPane('tool')">工具</button>
+        </div>
+
+        <div class="scroll-area">
+            <!-- 影像面板 -->
+            <div id="pane-adj" class="pane active">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">導入原始影像</button>
+                <input type="file" id="fileInput" accept="image/*">
+
+                <span class="label">圖內編輯 (範圍選擇)</span>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>圖內縮放 (Zoom)</span><span class="ctrl-val" id="v-zoom">100%</span></div>
+                    <input type="range" class="f-slider" id="zoom" min="5" max="400" value="100">
+                </div>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>圖內旋轉 (Rotate)</span><span class="ctrl-val" id="v-rot">0°</span></div>
+                    <input type="range" class="f-slider" id="rot" min="-180" max="180" value="0">
+                </div>
+                <div class="grid-2">
+                    <div class="ctrl"><div class="ctrl-head"><span>位移 X</span></div><input type="range" class="f-slider" id="posX" min="-1500" max="1500" value="0"></div>
+                    <div class="ctrl"><div class="ctrl-head"><span>位移 Y</span></div><input type="range" class="f-slider" id="posY" min="-1500" max="1500" value="0"></div>
+                </div>
+
+                <span class="label">基礎曝光調節</span>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>曝光 (Exposure)</span><span class="ctrl-val" id="v-exp">0</span></div>
+                    <input type="range" class="f-slider" id="exp" min="-100" max="100" value="0">
+                </div>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>陰影 (Shadows) <small>(不影響色系)</small></span><span class="ctrl-val" id="v-sha">0</span></div>
+                    <input type="range" class="f-slider" id="sha" min="0" max="100" value="0">
+                </div>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>增豔/對比 (Contrast)</span><span class="ctrl-val" id="v-con">0</span></div>
+                    <input type="range" class="f-slider" id="con" min="-100" max="100" value="0">
+                </div>
+            </div>
+
+            <!-- 色彩面板 -->
+            <div id="pane-clr" class="pane">
+                <span class="label">色彩平衡</span>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>色溫 (Temperature)</span><span class="ctrl-val" id="v-tem">0</span></div>
+                    <input type="range" class="f-slider" id="tem" min="-100" max="100" value="0">
+                </div>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>色調 (Tint)</span><span class="ctrl-val" id="v-tin">0</span></div>
+                    <input type="range" class="f-slider" id="tin" min="-100" max="100" value="0">
+                </div>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>飽和度 (Saturation)</span><span class="ctrl-val" id="v-sat">0</span></div>
+                    <input type="range" class="f-slider" id="sat" min="-100" max="100" value="0">
+                </div>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>自然飽和度 (Vibrance)</span><span class="ctrl-val" id="v-vib">0</span></div>
+                    <input type="range" class="f-slider" id="vib" min="-100" max="100" value="0">
+                </div>
+
+                <span class="label">RGBY 獨立色彩強化</span>
+                <div class="grid-2">
+                    <div class="ctrl"><div class="ctrl-head"><span style="color:#f87171">紅色強化</span></div><input type="range" class="f-slider" id="red" min="-100" max="100" value="0"></div>
+                    <div class="ctrl"><div class="ctrl-head"><span style="color:#60a5fa">藍色強化</span></div><input type="range" class="f-slider" id="blu" min="-100" max="100" value="0"></div>
+                    <div class="ctrl"><div class="ctrl-head"><span style="color:#4ade80">綠色強化</span></div><input type="range" class="f-slider" id="gre" min="-100" max="100" value="0"></div>
+                    <div class="ctrl"><div class="ctrl-head"><span style="color:#fbbf24">黃色強化</span></div><input type="range" class="f-slider" id="yel" min="-100" max="100" value="0"></div>
+                </div>
+            </div>
+
+            <!-- 外框面板 -->
+            <div id="pane-shp" class="pane">
+                <span class="label">外框形狀</span>
+                <div class="grid-3">
+                    <button class="btn-outline active" id="shp-rect" onclick="setShape('rect')">矩形</button>
+                    <button class="btn-outline" id="shp-circle" onclick="setShape('circle')">圓形</button>
+                    <button class="btn-outline" id="shp-stamp" onclick="setShape('stamp')">郵票</button>
+                </div>
+
+                <span class="label">畫布長寬比例 (Aspect Ratio)</span>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>比例控制</span><span class="ctrl-val" id="v-aspect">0.75</span></div>
+                    <input type="range" id="aspectSlider" min="0.5" max="2" step="0.01" value="0.75" oninput="updateAspect(this.value)">
+                </div>
+
+                <span class="label">樣式與顏色</span>
+                <div class="grid-2">
+                    <div class="ctrl"><div class="ctrl-head"><span>外框底色</span></div><input type="color" id="frameBg" value="#ffffff" oninput="render()"></div>
+                    <div class="ctrl"><div class="ctrl-head"><span>邊線顏色</span></div><input type="color" id="frameBorderColor" value="#222222" oninput="render()"></div>
+                </div>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>邊線粗細</span><span class="ctrl-val" id="v-borderWidth">2</span></div>
+                    <input type="range" id="borderWidth" min="0" max="60" value="2" oninput="updateVal('borderWidth', this.value)">
+                </div>
+                <div class="ctrl" id="radiusCtrl">
+                    <div class="ctrl-head"><span>圓角大小 (僅矩形)</span><span class="ctrl-val" id="v-borderRadius">0</span></div>
+                    <input type="range" id="borderRadius" min="0" max="300" value="0" oninput="updateVal('borderRadius', this.value)">
+                </div>
+                <div class="ctrl">
+                    <div class="ctrl-head"><span>內部間距 (Padding)</span><span class="ctrl-val" id="v-fInset">12</span></div>
+                    <input type="range" class="f-slider" id="fInset" min="0" max="35" value="12">
+                </div>
+            </div>
+
+            <!-- 文字面板 -->
+            <div id="pane-txt" class="pane">
+                <button class="btn" onclick="addText()">＋ 新增文字方塊</button>
+                <div id="textList"></div>
+            </div>
+
+            <!-- 工具面板 -->
+            <div id="pane-tool" class="pane">
+                <span class="label">編輯模式</span>
+                <div class="grid-2">
+                    <button class="btn-outline active" id="tool-pan" onclick="setTool('pan')">選取/拖曳</button>
+                    <button class="btn-outline" id="tool-heal" onclick="setTool('heal')">消除筆</button>
+                </div>
+                <div class="ctrl" id="brushSizeCtrl" style="display:none; margin-top:15px;">
+                    <div class="ctrl-head"><span>消除筆刷大小</span></div>
+                    <input type="range" id="brushSize" min="5" max="150" value="40">
+                </div>
+                
+                <button class="btn" style="background:#ef4444; color:white; margin-top:2.5rem;" onclick="resetAll()">重置所有工作</button>
+            </div>
+
+            <button class="btn" style="background:#10b981; color:white; margin-top:1rem;" onclick="download()">匯出影像檔 (PNG)</button>
+        </div>
+    </aside>
+
+    <main class="stage">
+        <div class="top-bar">
+            <div style="font-size:0.8rem; font-weight:800; letter-spacing:1px; color:var(--accent)">ULTIMATE FRAME WORKSTATION V18</div>
+            <div style="display:flex; align-items:center; gap:20px;">
+                <span style="font-size:0.75rem; color:#a1a1aa;">視窗縮放: <span id="vScaleLabel" style="color:var(--accent)">100%</span></span>
+                <input type="range" id="vScaleSlider" min="5" max="300" value="100" style="width: 140px;">
+            </div>
+            <div id="info" style="font-size:0.75rem; color:#71717a; font-family:monospace;">READY</div>
+        </div>
+
+        <div class="viewport">
+            <div class="canvas-wrapper" id="canvasBox" style="display:none;">
+                <canvas id="mainCanvas"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const canvasBox = document.getElementById('canvasBox');
+        
+        let sourceImg = null;
+        let currentShape = 'rect';
+        let aspect = 0.75;
+        let activeTool = 'pan';
+        let draggingIdx = -1;
+
+        // 影像狀態
+        const state = {
+            exp: 0, sha: 0, tem: 0, tin: 0, sat: 0, vib: 0, con: 0,
+            red: 0, gre: 0, blu: 0, yel: 0,
+            rot: 0, zoom: 100, posX: 0, posY: 0,
+            fInset: 12,
+            borderWidth: 2,
+            borderRadius: 0
+        };
+
+        // 文字清單
+        let textItems = [
+            { id: 1, text: "AI WORKSHOP", x: 0.5, y: 0.94, size: 45, font: "'Bebas Neue'", vertical: false, color: "#27272a" }
+        ];
+
+        // 十種字體選項
+        const fontOptions = [
+            { name: "標準黑體", val: "'Noto Sans TC'" },
+            { name: "優雅明體", val: "'Noto Serif TC'" },
+            { name: "經典襯線", val: "'Playfair Display'" },
+            { name: "標題 Bebas", val: "'Bebas Neue'" },
+            { name: "數位代碼", val: "'Roboto Mono'" },
+            { name: "藝術楷書", val: "'Ma Shan Zheng'" },
+            { name: "狂放草書", val: "'Zhi Mang Xing'" },
+            { name: "古風小薇", val: "'ZCOOL XiaoWei'" },
+            { name: "手寫舞動", val: "'Dancing Script'" },
+            { name: "手寫 Marker", val: "'Permanent Marker'" }
+        ];
+
+        // 功能分頁切換
+        function setPane(paneId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(paneId));
+            if(activeBtn) activeBtn.classList.add('active');
+            document.getElementById('pane-' + paneId).classList.add('active');
+        }
+
+        // 檔案讀取
+        document.getElementById('fileInput').onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    sourceImg = img;
+                    updateCanvasSize();
+                    canvasBox.style.display = 'block';
+                    render();
+                    renderTextList();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        function updateCanvasSize() {
+            if(!sourceImg) return;
+            const baseSize = 2400; // 提升基礎解析度
+            if(aspect < 1) {
+                canvas.height = baseSize; canvas.width = baseSize * aspect;
+            } else {
+                canvas.width = baseSize; canvas.height = baseSize / aspect;
+            }
+            // 自動縮放畫布以適應視窗
+            const vp = document.querySelector('.viewport');
+            const fit = Math.min((vp.clientWidth*0.85)/canvas.width, (vp.clientHeight*0.85)/canvas.height);
+            updateViewScale(Math.round(fit * 100));
+            document.getElementById('info').innerText = `${Math.round(canvas.width)} x ${Math.round(canvas.height)}`;
+        }
+
+        function updateViewScale(val) {
+            document.getElementById('vScaleSlider').value = val;
+            document.getElementById('vScaleLabel').innerText = val + '%';
+            canvasBox.style.transform = `scale(${val / 100})`;
+        }
+        document.getElementById('vScaleSlider').oninput = (e) => updateViewScale(e.target.value);
+
+        function updateAspect(val) {
+            aspect = parseFloat(val);
+            document.getElementById('v-aspect').innerText = aspect;
+            updateCanvasSize();
+            render();
+        }
+
+        function updateVal(id, val) {
+            state[id] = parseFloat(val);
+            document.getElementById('v-'+id).innerText = val;
+            render();
+        }
+
+        // 核心渲染引擎
+        function render() {
+            if(!sourceImg) return;
+            const w = canvas.width, h = canvas.height;
+            const padding = (state.fInset/100) * Math.min(w,h);
+            const bgColor = document.getElementById('frameBg').value;
+            const borderColor = document.getElementById('frameBorderColor').value;
+
+            // 1. 離屏快取處理影像
+            const buffer = document.createElement('canvas');
+            buffer.width = w; buffer.height = h;
+            const bCtx = buffer.getContext('2d');
+
+            bCtx.save();
+            const imgAspect = sourceImg.width / sourceImg.height;
+            const targetW = w - padding * 2;
+            const targetH = h - padding * 2;
+            const canvasAspect = targetW / targetH;
+            
+            let dW, dH;
+            if(imgAspect > canvasAspect) {
+                dH = targetH; dW = dH * imgAspect;
+            } else {
+                dW = targetW; dH = dW / imgAspect;
+            }
+
+            bCtx.translate(w/2 + state.posX, h/2 + state.posY);
+            bCtx.rotate(state.rot * Math.PI/180);
+            const s = state.zoom / 100;
+            bCtx.scale(s, s);
+            bCtx.drawImage(sourceImg, -dW/2, -dH/2, dW, dH);
+            bCtx.restore();
+
+            // 專業影像處理
+            const idata = bCtx.getImageData(0,0,w,h);
+            const d = idata.data;
+            const exposure = Math.pow(2, state.exp/50);
+            const contrast = (state.con + 100) / 100;
+            const sat = (state.sat + 100) / 100;
+            const vibrance = (state.vib + 100) / 100;
+
+            for(let i=0; i<d.length; i+=4) {
+                let r = d[i], g = d[i+1], b = d[i+2];
+                
+                // A. 曝光
+                r *= exposure; g *= exposure; b *= exposure;
+
+                // B. 陰影補償 (物理正確：不影響色系)
+                const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                if(luminance < 120 && state.sha > 0) {
+                    const boost = (state.sha / 100) * (1 - luminance / 120);
+                    r *= (1 + boost); g *= (1 + boost); b *= (1 + boost);
+                }
+
+                // C. 增豔/對比
+                r = (r - 128) * contrast + 128;
+                g = (g - 128) * contrast + 128;
+                b = (b - 128) * contrast + 128;
+
+                // D. 白平衡 (色溫 & 色調)
+                r += state.tem; b -= state.tem;
+                g += state.tin;
+
+                // E. 獨立色彩強化
+                r += state.red; g += state.gre; b += state.blu;
+                if(state.yel !== 0) { r += state.yel * 0.5; g += state.yel * 0.5; }
+
+                // F. 飽和度與自然飽和度
+                const gray = 0.299*r + 0.587*g + 0.114*b;
+                const maxVal = Math.max(r, g, b);
+                const saturationAmount = sat * (1 + (vibrance - 1) * (1 - (maxVal - gray)/128));
+                
+                d[i] = gray + (r - gray) * saturationAmount;
+                d[i+1] = gray + (g - gray) * saturationAmount;
+                d[i+2] = gray + (b - gray) * saturationAmount;
+            }
+            bCtx.putImageData(idata, 0, 0);
+
+            // 2. 主畫布合成
+            ctx.clearRect(0,0,w,h);
+            
+            // 背景填充
+            ctx.fillStyle = bgColor;
+            if(currentShape === 'circle') {
+                ctx.beginPath(); ctx.arc(w/2, h/2, Math.min(w,h)/2, 0, Math.PI*2); ctx.fill();
+            } else if (currentShape === 'stamp') {
+                ctx.fillRect(0,0,w,h);
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-out';
+                const dot = Math.min(w,h) * 0.022;
+                const gap = dot * 2.8;
+                for(let x=0; x<=w+gap; x+=gap){ ctx.beginPath(); ctx.arc(x,0,dot,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(x,h,dot,0,7); ctx.fill(); }
+                for(let y=0; y<=h+gap; y+=gap){ ctx.beginPath(); ctx.arc(0,y,dot,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(w,y,dot,0,7); ctx.fill(); }
+                ctx.restore();
+            } else {
+                if(state.borderRadius > 0) {
+                    ctx.beginPath(); ctx.roundRect(0, 0, w, h, state.borderRadius); ctx.fill();
+                } else {
+                    ctx.fillRect(0,0,w,h);
+                }
+            }
+
+            // 裁切影像區域
+            ctx.save();
+            ctx.beginPath();
+            if(currentShape === 'circle') {
+                ctx.arc(w/2, h/2, Math.min(w,h)/2 - padding, 0, Math.PI*2);
+            } else {
+                const r = state.borderRadius > 0 ? Math.max(0, state.borderRadius - padding) : 0;
+                ctx.roundRect(padding, padding, w-padding*2, h-padding*2, r);
+            }
+            ctx.clip();
+            ctx.drawImage(buffer, 0, 0);
+            ctx.restore();
+
+            // 繪製邊線
+            if(state.borderWidth > 0) {
+                ctx.strokeStyle = borderColor;
+                ctx.lineWidth = state.borderWidth * (Math.min(w,h)/1200);
+                if(currentShape === 'circle') {
+                    ctx.beginPath(); ctx.arc(w/2, h/2, Math.min(w,h)/2 - padding, 0, Math.PI*2); ctx.stroke();
+                } else {
+                    const r = state.borderRadius > 0 ? Math.max(0, state.borderRadius - padding) : 0;
+                    ctx.beginPath(); ctx.roundRect(padding, padding, w-padding*2, h-padding*2, r); ctx.stroke();
+                }
+            }
+
+            // 3. 繪製文字
+            textItems.forEach(item => {
+                ctx.save();
+                ctx.translate(item.x * w, item.y * h);
+                if(item.vertical) ctx.rotate(-Math.PI/2);
+                ctx.fillStyle = item.color;
+                ctx.font = `${item.size * (Math.min(w,h)/1200)}px ${item.font}`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(item.text, 0, 0);
+                if(activeTool === 'pan') {
+                    ctx.strokeStyle = "rgba(251, 191, 36, 0.4)";
+                    ctx.lineWidth = 2;
+                    const m = ctx.measureText(item.text);
+                    ctx.strokeRect(-m.width/2 - 15, -item.size/2 - 10, m.width + 30, item.size + 20);
+                }
+                ctx.restore();
+            });
+        }
+
+        function setShape(s) {
+            currentShape = s;
+            document.querySelectorAll('[id^="shp-"]').forEach(el => el.classList.remove('active'));
+            document.getElementById('shp-'+s).classList.add('active');
+            document.getElementById('radiusCtrl').style.display = (s === 'rect' ? 'block' : 'none');
+            render();
+        }
+
+        function setTool(t) {
+            activeTool = t;
+            document.querySelectorAll('[id^="tool-"]').forEach(el => el.classList.remove('active'));
+            document.getElementById('tool-'+t).classList.add('active');
+            document.getElementById('brushSizeCtrl').style.display = (t==='heal'?'block':'none');
+            render();
+        }
+
+        // 文字管理
+        function addText() {
+            textItems.push({ id: Date.now(), text: "新的文字內容", x: 0.5, y: 0.5, size: 60, font: "'Noto Sans TC'", vertical: false, color: "#222222" });
+            renderTextList(); render();
+        }
+
+        function renderTextList() {
+            const list = document.getElementById('textList');
+            list.innerHTML = "";
+            textItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "text-item-card";
+                div.innerHTML = `
+                    <input type="text" value="${item.text}" oninput="updateText(${item.id}, 'text', this.value)">
+                    <div class="grid-2">
+                        <select onchange="updateText(${item.id}, 'font', this.value)">
+                            ${fontOptions.map(f => `<option value="${f.val}" ${item.font===f.val?'selected':''}>${f.name}</option>`).join('')}
+                        </select>
+                        <input type="color" value="${item.color}" oninput="updateText(${item.id}, 'color', this.value)">
+                    </div>
+                    <div class="grid-2">
+                        <input type="number" value="${item.size}" oninput="updateText(${item.id}, 'size', this.value)">
+                        <button class="btn-outline" style="color:#f87171" onclick="deleteText(${item.id})">刪除文字</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function updateText(id, key, val) {
+            const item = textItems.find(i => i.id === id);
+            if(item) { item[key] = key==='size'?parseFloat(val):val; render(); }
+        }
+
+        function deleteText(id) { textItems = textItems.filter(i=>i.id!==id); renderTextList(); render(); }
+
+        // 滑鼠與觸控交互
+        canvas.onmousedown = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scale = canvas.width / rect.width;
+            const mx = (e.clientX - rect.left) * scale / canvas.width;
+            const my = (e.clientY - rect.top) * scale / canvas.height;
+            
+            if(activeTool === 'pan') {
+                draggingIdx = textItems.findIndex(t => Math.abs(t.x-mx)<0.08 && Math.abs(t.y-my)<0.08);
+            } else {
+                applyHeal(e.clientX - rect.left, e.clientY - rect.top, scale);
+            }
+        };
+
+        window.onmousemove = (e) => {
+            if(draggingIdx !== -1) {
+                const rect = canvas.getBoundingClientRect();
+                const scale = canvas.width / rect.width;
+                textItems[draggingIdx].x = (e.clientX - rect.left) * scale / canvas.width;
+                textItems[draggingIdx].y = (e.clientY - rect.top) * scale / canvas.height;
+                render();
+            }
+        };
+        window.onmouseup = () => draggingIdx = -1;
+
+        function applyHeal(lx, ly, s) {
+            const x = lx * s, y = ly * s;
+            const r = document.getElementById('brushSize').value * s;
+            ctx.save();
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.clip();
+            // 簡易消除筆：採樣左上角內容
+            ctx.drawImage(canvas, x+r*2, y+r*2, r*3, r*3, x-r, y-r, r*3, r*3);
+            ctx.restore();
+        }
+
+        // 滑桿連動
+        document.querySelectorAll('.f-slider').forEach(sl => {
+            sl.oninput = () => {
+                state[sl.id] = parseFloat(sl.value);
+                const v = document.getElementById('v-'+sl.id);
+                if(v) v.innerText = sl.value + (sl.id==='rot'?'°':(sl.id==='zoom'?'%':''));
+                render();
+            };
+        });
+
+        function resetAll() { if(confirm('確定要清除所有編輯進度嗎？')) location.reload(); }
+        
+        function download() {
+            const link = document.createElement('a');
+            link.download = `IMAGE_MASTER_V18_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+        }
+
+        // 初始化
+        renderTextList();
+    </script>
+</body>
+</html>
