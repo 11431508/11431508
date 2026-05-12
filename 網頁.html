@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作品集導覽首頁</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #f0f2f5;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 bg-slate-100">
+
+    <div class="max-w-md w-full glass-card rounded-3xl p-8 shadow-2xl">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">專案作品集</h1>
+            <p class="text-slate-500">請選擇想要開啟的應用程式</p>
+        </header>
+
+        <nav class="space-y-4">
+            <!-- 3x3 滑動拼圖 -->
+            <a href="01.html" class="btn-card flex items-center p-4 bg-white rounded-2xl border-2 border-transparent hover:border-blue-500 group">
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mr-4 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="block text-lg font-bold text-slate-700">3*3 滑動拼圖</span>
+                    <span class="text-sm text-slate-400">益智排字遊戲</span>
+                </div>
+            </a>
+
+            <!-- Color Flood 遊戲 -->
+            <a href="02.html" class="btn-card flex items-center p-4 bg-white rounded-2xl border-2 border-transparent hover:border-emerald-500 group">
+                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mr-4 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="block text-lg font-bold text-slate-700">Color Flood 遊戲</span>
+                    <span class="text-sm text-slate-400">色彩填滿挑戰</span>
+                </div>
+            </a>
+
+            <!-- 修圖網站 -->
+            <a href="image.html" class="btn-card flex items-center p-4 bg-white rounded-2xl border-2 border-transparent hover:border-purple-500 group">
+                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mr-4 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="block text-lg font-bold text-slate-700">修圖網站</span>
+                    <span class="text-sm text-slate-400">影像處理工具</span>
+                </div>
+            </a>
+        </nav>
+
+        <footer class="mt-10 text-center">
+            <p class="text-xs text-slate-400">© 2024 作品展示室</p>
+        </footer>
+    </div>
+
+    <script>
+        // 點擊反饋效果
+        document.querySelectorAll('.btn-card').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                // 這裡可以加入轉場動畫 logic
+                console.log('導航至: ' + this.getAttribute('href'));
+            });
+        });
+    </script>
+</body>
+</html>
