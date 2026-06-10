@@ -1,0 +1,3406 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TimeFlow Studio 4.0 | 萬能天藍時空秘書</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans TC -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.436.0/dist/umd/lucide.min.js"></script>
+    
+    <style>
+        body, button, input, select, textarea {
+            font-family: "FangSong", "STFangsong", "FangSong_GB2312", "華文仿宋", "华文仿宋", "Noto Serif TC", serif;
+        }
+        body {
+            background: #fafafa;
+            transition: background-color 0.5s ease;
+        }
+        /* 仿宋體下保留等寬數字顯示（時鐘 / 倒數） */
+        .font-mono {
+            font-family: ui-monospace, SFMono-Regular, "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace !important;
+        }
+        /* 全螢幕橫屏時讓主內容鋪滿，周檢視左右分欄更開闊 */
+        :fullscreen main,
+        :-webkit-full-screen main {
+            max-width: 100% !important;
+        }
+        /* 隱藏預設滾動條但保持滾動功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* 天藍優雅滾動條 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(224, 242, 254, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(14, 165, 233, 0.3);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0284c7;
+        }
+        /* 極簡白玉玻璃卡片 */
+        .sky-glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .glow-sky-active {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+        /* 時間規劃虛線過渡動畫 */
+        .timeline-slot {
+            transition: all 0.2s ease;
+        }
+        .timeline-slot:hover {
+            background: rgba(14, 165, 233, 0.04);
+        }
+    </style>
+</head>
+<body id="app-body" class="flex flex-col min-h-screen overflow-x-hidden text-slate-800">
+
+    <!-- 頂部高質感標題列 -->
+    <header class="bg-white/80 border-b border-sky-100/80 px-6 py-4 flex items-center justify-between shrink-0 z-20 backdrop-blur-md sticky top-0">
+        <div class="flex items-center gap-2.5">
+            <div class="bg-sky-500 p-2.5 rounded-xl text-white">
+                <i data-lucide="cloud-sun" class="w-5.5 h-5.5"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-extrabold tracking-wide bg-gradient-to-r from-sky-600 via-sky-800 to-blue-700 bg-clip-text text-transparent">TimeFlow Studio 4.0</h1>
+                <p class="text-[9px] text-sky-600 font-bold tracking-wider uppercase">萬能天藍時空秘書</p>
+            </div>
+        </div>
+
+        <!-- 系統時鐘與基本操作 -->
+        <div class="flex items-center gap-3">
+            <div class="hidden md:flex items-center gap-2">
+                <span id="dashboard-clock" class="text-xs font-mono text-sky-800 bg-sky-100/80 px-3 py-1.5 rounded-xl border border-sky-200/50">--:--:--</span>
+                <span id="sleep-reminder-indicator" class="hidden text-[10px] bg-sky-100 text-sky-700 border border-sky-200 px-2 py-1 rounded-lg font-bold items-center gap-1">
+                    <span class="w-1.5 h-1.5 bg-sky-500 rounded-full"></span> 期待睡眠：<span id="sleep-indicator-time">--:--</span>
+                </span>
+                <span id="focus-running-indicator" onclick="switchTab('focus')" class="hidden text-[10px] bg-sky-500 text-white px-2 py-1 rounded-lg font-bold items-center gap-1 cursor-pointer" title="專注計時進行中（點擊返回專注頁）">
+                    <i data-lucide="timer" class="w-3 h-3"></i> 專注 <span id="focus-running-time" class="font-mono">25:00</span>
+                </span>
+            </div>
+            <!-- 🌟 極易操作的頂部一鍵新增按鈕 -->
+            <button onclick="openTaskModal()" class="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>新增事項</span>
+            </button>
+            <button onclick="resetToDemoData()" class="text-xs text-sky-700 hover:text-sky-900 transition-colors flex items-center gap-1">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">清空重設</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 最上排：可滑動功能切換鍵 -->
+    <div class="bg-white/40 border-b border-sky-100 sticky top-[71px] z-20 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 py-2">
+            <div id="top-nav-bar" class="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap px-1 py-1 scroll-smooth snap-x snap-mandatory">
+                
+                <button onclick="switchTab('dashboard')" id="menu-dashboard" class="snap-start flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-sky-500 text-white shadow-sm">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>行事曆</span>
+                    <span class="bg-white/30 text-white text-[8px] px-1.5 py-0.5 rounded font-black uppercase">日/周/月</span>
+                </button>
+
+                <button onclick="switchTab('tasks')" id="menu-tasks" class="snap-start flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-sky-800 hover:bg-sky-100/50 hover:text-sky-950 transition-all duration-300">
+                    <i data-lucide="check-square" class="w-4 h-4"></i>
+                    <span>待辦清單</span>
+                    <span id="badge-todo-count" class="bg-sky-200 text-sky-800 text-[8px] px-1.5 py-0.5 rounded font-black">0</span>
+                </button>
+
+                <button onclick="switchTab('focus')" id="menu-focus" class="snap-start flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-sky-800 hover:bg-sky-100/50 hover:text-sky-950 transition-all duration-300">
+                    <i data-lucide="timer" class="w-4 h-4"></i>
+                    <span>極境專注時鐘</span>
+                    <span class="bg-sky-200 text-sky-800 text-[8px] px-1.5 py-0.5 rounded font-black uppercase">音樂播放</span>
+                </button>
+
+                <button onclick="switchTab('sleep')" id="menu-sleep" class="snap-start flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-sky-800 hover:bg-sky-100/50 hover:text-sky-950 transition-all duration-300">
+                    <i data-lucide="moon-star" class="w-4 h-4"></i>
+                    <span>睡眠作息與鬧鐘</span>
+                </button>
+
+                <button onclick="switchTab('countdowns')" id="menu-countdowns" class="snap-start flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-sky-800 hover:bg-sky-100/50 hover:text-sky-950 transition-all duration-300">
+                    <i data-lucide="hourglass" class="w-4 h-4"></i>
+                    <span>倒數</span>
+                    <span id="badge-countdown-count" class="bg-sky-200 text-sky-800 text-[8px] px-1.5 py-0.5 rounded font-black">0</span>
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 主工作區 -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden max-w-7xl mx-auto w-full p-4 sm:p-6 space-y-6">
+        
+        <!-- TAB 0: 跨時空檢視 (日 / 周 / 月) -->
+        <section id="tab-dashboard" class="space-y-6">
+
+            <!-- 行事曆主標題（含年份） -->
+            <div class="flex items-center justify-between gap-3">
+                <h2 id="calendar-main-label" class="text-lg font-bold text-slate-800 tracking-wide">—</h2>
+                <button onclick="toggleFullscreen()" class="hidden lg:flex items-center gap-1.5 text-xs font-bold text-sky-700 bg-white border border-sky-200 px-3 py-1.5 rounded-xl hover:bg-sky-50 transition-all" title="全螢幕橫屏（周檢視自動分欄）">
+                    <i data-lucide="maximize" class="w-4 h-4"></i> 全螢幕
+                </button>
+            </div>
+
+            <!-- 控制與日期選擇 -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                <div class="flex items-center bg-white/60 p-1 rounded-xl border border-sky-100/80">
+                    <button onclick="setDashboardView('day')" id="view-btn-day" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-white bg-sky-500 shadow">日檢視</button>
+                    <button onclick="setDashboardView('week')" id="view-btn-week" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-sky-800 hover:text-sky-950">周排程</button>
+                    <button onclick="setDashboardView('month')" id="view-btn-month" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-sky-800 hover:text-sky-950">月日曆</button>
+                    <button onclick="setDashboardView('year')" id="view-btn-year" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-sky-800 hover:text-sky-950">年日曆</button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="shiftCalendarDate(-1)" class="p-2 bg-white/80 hover:bg-white rounded-xl text-sky-700 border border-sky-200/40 shadow-sm">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <input type="date" id="calendar-date-input" onchange="onCalendarDateChanged()" class="bg-white/80 border border-sky-200 rounded-xl px-3 py-2 text-xs text-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-500/40">
+                    <button onclick="shiftCalendarDate(1)" class="p-2 bg-white/80 hover:bg-white rounded-xl text-sky-700 border border-sky-200/40 shadow-sm">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 1. 日檢視：Apple風格時間軸虛線網格排程 -->
+            <div id="view-day-container" class="space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- 左/中側：Apple日曆動態時間規劃虛線面板 -->
+                    <div class="lg:col-span-2 sky-glass-card rounded-2xl p-5 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-sky-950 flex items-center gap-2">
+                                <i data-lucide="calendar-range" class="w-4.5 h-4.5 text-sky-600"></i> 今日時空任務流
+                            </h3>
+                            <button onclick="openTaskModal()" class="bg-sky-500/10 text-sky-700 border border-sky-500/20 px-2.5 py-1 rounded-lg text-[10px] font-bold hover:bg-sky-500 hover:text-white transition-all flex items-center gap-1 shadow-sm">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> 在今日新增
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-slate-500">採用 Apple 日曆風格與 TimeTree 連續事件條，支援自訂持續時間。<b>輕點虛線網格的任何空白處，即可在該時間自訂排程新增任務！</b></p>
+                        
+                        <!-- Apple 日曆風格 虛線時間軸容器 -->
+                        <div class="relative border border-sky-100/80 rounded-2xl bg-white/50 overflow-hidden shadow-sm">
+                            <div id="day-timeline-scroll-container" class="max-h-[500px] overflow-y-auto relative flex scroll-smooth">
+                                
+                                <!-- 小時欄標籤 -->
+                                <div id="timeline-hour-labels" class="w-14 select-none shrink-0 border-r border-sky-100/60 bg-white/40 sticky left-0 z-10 text-right pr-2 pt-[2px] flex flex-col">
+                                    <!-- JS 渲染 -->
+                                </div>
+
+                                <!-- 事件與虛線排程渲染區 -->
+                                <div class="flex-1 relative h-[1440px] bg-white/10 cursor-pointer" id="day-timeline-events-container" title="點擊空白處可快速於此時間自訂排程新增任務">
+                                    <!-- 背景虛線網格 -->
+                                    <div id="timeline-grid-lines" class="absolute inset-0 pointer-events-none">
+                                        <!-- JS 渲染 -->
+                                    </div>
+                                    
+                                    <!-- 絕對定位的事件卡片 -->
+                                    <div id="timeline-events-holder" class="absolute inset-0">
+                                        <!-- JS 渲染 -->
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右側：日常快捷派發 -->
+                    <div class="space-y-4">
+                        <div class="sky-glass-card rounded-2xl p-5 space-y-4">
+                            <h3 class="text-sm font-bold text-sky-950 flex items-center gap-2">
+                                <i data-lucide="sparkles" class="w-4.5 h-4.5 text-sky-600"></i> 日常公事快捷派發
+                            </h3>
+                            <p class="text-[11px] text-slate-500">點擊模板即可在 1 秒內迅速派發到今日時空中：</p>
+                            <div id="day-routine-shortcuts" class="space-y-2">
+                                <!-- JS 動態渲染 -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 2. 周檢視容器 (7格行事曆) -->
+            <div id="view-week-container" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4" id="week-view-grid">
+                    <!-- JS 動態渲染 -->
+                </div>
+            </div>
+
+            <!-- 3. 月檢視容器 (完整日曆) -->
+            <div id="view-month-container" class="hidden sky-glass-card rounded-3xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 id="month-view-label" class="text-sm font-extrabold text-sky-950 uppercase tracking-wider">今日日曆</h4>
+                </div>
+                <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-sky-800 mb-2 pb-2 border-b border-sky-100">
+                    <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+                </div>
+                <div class="grid grid-cols-7 gap-2" id="month-view-grid">
+                    <!-- JS 動態渲染 -->
+                </div>
+            </div>
+
+            <!-- 4. 年檢視容器 (整年 12 個月) -->
+            <div id="view-year-container" class="hidden sky-glass-card rounded-3xl p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="year-view-grid">
+                    <!-- JS 動態渲染 -->
+                </div>
+            </div>
+
+            <!-- 📋 日常公事與循環課表模板（已整合進行事曆） -->
+            <div class="sky-glass-card rounded-2xl p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="clipboard-list" class="text-sky-600 w-4.5 h-4.5"></i>
+                        日常公事與循環課表模板
+                    </h3>
+                    <button onclick="openRoutineModal()" class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        建立模板
+                    </button>
+                </div>
+                <p class="text-[11px] text-slate-500">把重複的課程或習慣存成模板，點「派發」即可快速生成所選日期的待辦事項。</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="routine-grid">
+                    <!-- JS 渲染 -->
+                </div>
+            </div>
+
+            <!-- 📓 當日心境與成就日記（已整合進行事曆） -->
+            <div class="sky-glass-card rounded-2xl p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="book-open" class="text-sky-600 w-4.5 h-4.5"></i>
+                        當日心境與成就日記
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-500 font-medium">日記日期</span>
+                        <input type="date" id="journal-date" onchange="loadJournalEntry()" class="bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2 space-y-4">
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">今日心情狀態</label>
+                            <div class="grid grid-cols-5 gap-2">
+                                <button onclick="selectJournalMood('excellent')" id="mood-excellent" class="flex flex-col items-center justify-center p-2 rounded-xl border border-sky-100 bg-white hover:border-sky-500 transition-all">
+                                    <span class="text-xl">🥳</span>
+                                    <span class="text-[9px] font-bold text-slate-500 mt-1">超棒</span>
+                                </button>
+                                <button onclick="selectJournalMood('good')" id="mood-good" class="flex flex-col items-center justify-center p-2 rounded-xl border border-sky-100 bg-white hover:border-sky-500 transition-all">
+                                    <span class="text-xl">😊</span>
+                                    <span class="text-[9px] font-bold text-slate-500 mt-1">不錯</span>
+                                </button>
+                                <button onclick="selectJournalMood('neutral')" id="mood-neutral" class="flex flex-col items-center justify-center p-2 rounded-xl border border-sky-100 bg-white hover:border-sky-500 transition-all">
+                                    <span class="text-xl">😐</span>
+                                    <span class="text-[9px] font-bold text-slate-500 mt-1">平淡</span>
+                                </button>
+                                <button onclick="selectJournalMood('tired')" id="mood-tired" class="flex flex-col items-center justify-center p-2 rounded-xl border border-sky-100 bg-white hover:border-sky-500 transition-all">
+                                    <span class="text-xl">🥱</span>
+                                    <span class="text-[9px] font-bold text-slate-500 mt-1">疲累</span>
+                                </button>
+                                <button onclick="selectJournalMood('bad')" id="mood-bad" class="flex flex-col items-center justify-center p-2 rounded-xl border border-sky-100 bg-white hover:border-sky-500 transition-all">
+                                    <span class="text-xl">😣</span>
+                                    <span class="text-[9px] font-bold text-slate-500 mt-1">不順</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold text-slate-500 uppercase text-left">今日筆記日記</label>
+                            <textarea id="journal-textarea" placeholder="寫點今天的學習心得或生活碎碎念吧..." class="w-full h-40 bg-white/50 border border-sky-200 rounded-xl p-4 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500 leading-relaxed"></textarea>
+                            <button onclick="saveJournalEntry()" class="w-full bg-sky-500 hover:bg-sky-600 text-white text-xs font-black py-2.5 rounded-xl shadow flex items-center justify-center gap-1.5 transition-all">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                                儲存今日日記
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col min-h-[260px]">
+                        <div class="pb-2 border-b border-sky-100">
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="trophy" class="text-amber-500 w-4.5 h-4.5"></i>
+                                當日完成成就
+                            </h4>
+                            <p class="text-[10px] text-slate-500 mt-1">自動捕捉所選日期完成的待辦項目。</p>
+                        </div>
+                        <div class="flex-1 space-y-2.5 overflow-y-auto mt-4" id="journal-achievement-list">
+                            <!-- JS 渲染 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 1: 待辦任務管理 -->
+        <section id="tab-tasks" class="hidden space-y-6">
+            <!-- 任務控制區 -->
+            <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+                <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <!-- 搜尋 -->
+                    <div class="relative w-full sm:w-60">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                        <input type="text" id="task-search" placeholder="搜尋任務名稱..." oninput="renderTasks()" class="w-full bg-white/80 border border-sky-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/40">
+                    </div>
+                    <!-- 分類篩選 -->
+                    <select id="task-filter-category" onchange="renderTasks()" class="bg-white/80 border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                        <option value="all">所有分類</option>
+                    </select>
+                    <!-- 狀態篩選 -->
+                    <select id="task-filter-status" onchange="renderTasks()" class="bg-white/80 border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                        <option value="all">所有進度</option>
+                        <option value="todo">未開始</option>
+                        <option value="in_progress">進行中</option>
+                        <option value="completed">已完成</option>
+                        <option value="delayed">已延後</option>
+                        <option value="cancelled">已取消</option>
+                    </select>
+                </div>
+
+                <!-- 易操作新增刪除 -->
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button onclick="openCategoryModal()" class="bg-white/80 hover:bg-white text-slate-700 border border-sky-200 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="tag" class="w-4 h-4 text-sky-500"></i>
+                        分類色彩管理
+                    </button>
+                    <!-- 🌟 顯著的新增待辦按鈕 -->
+                    <button onclick="openTaskModal()" class="w-full sm:w-auto bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-md">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        新增待辦事項
+                    </button>
+                </div>
+            </div>
+
+            <!-- 看板分區 -->
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                <!-- 未開始 (ToDo) -->
+                <div class="bg-white/50 border border-sky-200/50 rounded-2xl p-4 flex flex-col min-h-[400px] shadow-sm">
+                    <div class="flex items-center justify-between pb-3 border-b border-sky-100 mb-4 cursor-pointer select-none" onclick="toggleTaskColumn('todo')" title="點擊收起 / 展開">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">未開始 (待辦)</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="count-todo" class="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full font-bold">0</span>
+                            <i data-lucide="chevron-up" id="chevron-todo" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
+                        </div>
+                    </div>
+                    <div id="list-todo" class="space-y-3 flex-1 overflow-y-auto">
+                        <!-- JS 渲染 -->
+                    </div>
+                </div>
+
+                <!-- 進行中 -->
+                <div class="bg-white/50 border border-sky-200/50 rounded-2xl p-4 flex flex-col min-h-[400px] shadow-sm">
+                    <div class="flex items-center justify-between pb-3 border-b border-sky-100 mb-4 cursor-pointer select-none" onclick="toggleTaskColumn('in-progress')" title="點擊收起 / 展開">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]"></span>
+                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">進行中</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="count-in-progress" class="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full font-bold">0</span>
+                            <i data-lucide="chevron-up" id="chevron-in-progress" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
+                        </div>
+                    </div>
+                    <div id="list-in-progress" class="space-y-3 flex-1 overflow-y-auto">
+                        <!-- JS 渲染 -->
+                    </div>
+                </div>
+
+                <!-- 已完成 -->
+                <div class="bg-white/50 border border-sky-200/50 rounded-2xl p-4 flex flex-col min-h-[400px] shadow-sm">
+                    <div class="flex items-center justify-between pb-3 border-b border-sky-100 mb-4 cursor-pointer select-none" onclick="toggleTaskColumn('completed')" title="點擊收起 / 展開">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">已完成</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="count-completed" class="text-[10px] bg-sky-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">0</span>
+                            <i data-lucide="chevron-up" id="chevron-completed" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
+                        </div>
+                    </div>
+                    <div id="list-completed" class="space-y-3 flex-1 overflow-y-auto">
+                        <!-- JS 渲染 -->
+                    </div>
+                </div>
+
+                <!-- 異動保留區 -->
+                <div class="bg-white/50 border border-sky-200/50 rounded-2xl p-4 flex flex-col min-h-[400px] shadow-sm">
+                    <div class="flex items-center justify-between pb-3 border-b border-sky-100 mb-4 cursor-pointer select-none" onclick="toggleTaskColumn('alternatives')" title="點擊收起 / 展開">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
+                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">已延後與取消</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="count-alternatives" class="text-[10px] bg-sky-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">0</span>
+                            <i data-lucide="chevron-up" id="chevron-alternatives" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
+                        </div>
+                    </div>
+                    <div id="list-alternatives" class="space-y-3 flex-1 overflow-y-auto">
+                        <!-- JS 渲染 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 依分類顯示 -->
+            <div class="space-y-3 pt-2">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="tag" class="w-4 h-4 text-sky-500"></i> 依分類顯示
+                </h3>
+                <div id="tasks-by-category" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <!-- JS 渲染 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: 極境專注時鐘 -->
+        <section id="tab-focus" class="hidden flex flex-col items-center justify-center max-w-4xl mx-auto py-4 space-y-8">
+            <div class="sky-glass-card rounded-3xl p-8 w-full shadow-lg flex flex-col md:flex-row items-center gap-8 md:gap-12 relative overflow-hidden">
+                <div class="absolute -right-24 -bottom-24 w-60 h-60 bg-sky-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute -left-24 -top-24 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl"></div>
+
+                <!-- 環形倒計時器 -->
+                <div class="relative flex items-center justify-center w-60 h-60 shrink-0">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="120" cy="120" r="105" stroke-width="8" stroke="#f0f9ff" fill="transparent" />
+                        <circle id="focus-progress-bar" cx="120" cy="120" r="105" stroke-width="8" stroke="url(#sky-grad)" fill="transparent" stroke-dasharray="659" stroke-dashoffset="0" class="transition-all duration-1000" />
+                        <defs>
+                            <linearGradient id="sky-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#0ea5e9" />
+                                <stop offset="100%" stop-color="#3b82f6" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    
+                    <div class="absolute flex flex-col items-center justify-center">
+                        <span id="focus-timer-text" class="text-4xl font-extrabold tracking-wider font-mono text-sky-950">25:00</span>
+                        <span id="focus-mode-badge" class="text-[10px] uppercase font-black text-sky-600 bg-sky-100 border border-sky-200/50 px-2.5 py-1 rounded-full mt-2 tracking-widest">FOCUS</span>
+                    </div>
+                </div>
+
+                <!-- 專注設定與自訂時長/播放連結 -->
+                <div class="flex-1 w-full space-y-6">
+                    <!-- 模式快速選擇 -->
+                    <div class="grid grid-cols-3 bg-white/60 p-1 rounded-xl border border-sky-100">
+                        <button onclick="setFocusMode('focus')" id="mode-btn-focus" class="py-2 rounded-lg text-xs font-bold transition-all text-white bg-sky-500 shadow">專注 25M</button>
+                        <button onclick="setFocusMode('shortBreak')" id="mode-btn-short" class="py-2 rounded-lg text-xs font-bold transition-all text-sky-800 hover:text-sky-950">短休 5M</button>
+                        <button onclick="setFocusMode('longBreak')" id="mode-btn-long" class="py-2 rounded-lg text-xs font-bold transition-all text-sky-800 hover:text-sky-950">長休 15M</button>
+                    </div>
+
+                    <!-- 專注時鐘自訂時長輸入區 -->
+                    <div class="bg-white/70 p-4 rounded-2xl border border-sky-100 space-y-2.5">
+                        <label class="text-xs font-bold text-sky-900 flex items-center gap-1.5">
+                            <i data-lucide="clock" class="text-sky-500 w-4 h-4"></i>
+                            自訂您想要的專注時長 (分鐘)
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="number" id="focus-custom-minutes" value="25" min="1" max="180" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/40">
+                            <button onclick="applyCustomFocusDuration()" class="bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shrink-0 shadow-sm">
+                                套用時長
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 控制 -->
+                    <div class="flex gap-3">
+                        <button id="focus-start-btn" onclick="toggleFocusTimer()" class="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-sm font-black py-3.5 rounded-xl shadow flex items-center justify-center gap-2 transition-all">
+                            <i data-lucide="play" id="focus-start-icon" class="w-4 h-4"></i>
+                            <span id="focus-start-text">開始專注</span>
+                        </button>
+                        <button onclick="resetFocusTimer()" class="bg-white hover:bg-slate-50 text-sky-700 border border-sky-200 w-14 rounded-xl flex items-center justify-center transition-all shadow-sm">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- 音訊控制 -->
+                    <div class="bg-white/70 border border-sky-100 p-4 rounded-2xl space-y-4">
+                        <label class="text-xs font-bold text-sky-950 flex items-center gap-1.5">
+                            <i data-lucide="headphones" class="text-sky-500 w-4 h-4"></i>
+                            自訂專注背景隨讀音樂 (伴隨倒計時自動播放)
+                        </label>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setPresetMusic('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', '輕快 Lofi 鋼琴')" class="bg-sky-50 hover:bg-sky-100 text-[10px] py-1.5 px-2 rounded-lg text-sky-800 truncate text-left border border-sky-100 font-semibold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span> 天藍 Lofi
+                            </button>
+                            <button onclick="setPresetMusic('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', '專注 Alpha 腦波')" class="bg-sky-50 hover:bg-sky-100 text-[10px] py-1.5 px-2 rounded-lg text-sky-800 truncate text-left border border-sky-100 font-semibold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 專注 Alpha 波
+                            </button>
+                            <button onclick="setPresetMusic('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', '森林雨聲白噪音')" class="bg-sky-50 hover:bg-sky-100 text-[10px] py-1.5 px-2 rounded-lg text-sky-800 truncate text-left border border-sky-100 font-semibold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 大自然雨聲
+                            </button>
+                        </div>
+
+                        <div class="space-y-3 pt-2 border-t border-sky-100">
+                            <div class="flex items-center gap-4 text-xs font-semibold">
+                                <label class="flex items-center gap-1.5 text-slate-600 cursor-pointer">
+                                    <input type="radio" name="focus-audio-source" value="link" checked onchange="changeAudioSourceType('link')" class="accent-sky-500">
+                                    自訂貼上音樂連結
+                                </label>
+                                <label class="flex items-center gap-1.5 text-slate-600 cursor-pointer">
+                                    <input type="radio" name="focus-audio-source" value="file" onchange="changeAudioSourceType('file')" class="accent-sky-500">
+                                    自訂上傳本地音樂
+                                </label>
+                            </div>
+
+                            <!-- 連結輸入 -->
+                            <div id="audio-input-link-wrapper" class="relative">
+                                <input type="text" id="focus-audio-url" placeholder="貼上隨讀 MP3 或音訊連結..." onchange="handleAudioUrlChange()" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500">
+                            </div>
+
+                            <!-- 檔案上傳 -->
+                            <div id="audio-input-file-wrapper" class="hidden">
+                                <label class="w-full flex flex-col items-center justify-center bg-white border border-dashed border-sky-300 rounded-xl p-4 cursor-pointer hover:bg-sky-50/50 transition-all">
+                                    <i data-lucide="upload-cloud" class="w-6 h-6 text-sky-500 mb-1.5"></i>
+                                    <span class="text-xs text-sky-700 font-semibold" id="audio-file-name">上傳本地音訊檔 (MP3 等)</span>
+                                    <input type="file" id="focus-audio-file" accept="audio/*" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs pt-1">
+                            <div class="flex items-center gap-1.5 text-slate-600 max-w-[180px] truncate">
+                                <i data-lucide="music" class="w-3.5 h-3.5 text-sky-500 shrink-0"></i>
+                                當前: <span id="current-playing-title" class="font-bold text-sky-950 truncate">未載入</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-slate-400"></i>
+                                <input type="range" id="focus-audio-volume" min="0" max="1" step="0.05" value="0.5" oninput="setAudioVolume(this.value)" class="w-20 accent-sky-500 cursor-pointer h-1 bg-slate-200 rounded-lg appearance-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: 睡眠、自訂鬧鐘、計時與秒錶 -->
+        <section id="tab-sleep" class="hidden space-y-6 max-w-4xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- 左半：睡眠提醒與智慧鬧鐘 -->
+                <div class="space-y-6">
+                    <div class="sky-glass-card rounded-2xl p-5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-sky-950 flex items-center gap-2">
+                                <i data-lucide="moon" class="w-4.5 h-4.5 text-sky-600"></i> 預期睡眠設定與提醒
+                            </h3>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="sleep-reminder-enable" onchange="toggleSleepReminder()" class="sr-only peer" checked>
+                                <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-empty after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-500"></div>
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-500 block">預定就寢時間</label>
+                                <input type="time" id="sleep-expected-time" value="23:00" onchange="updateSleepSettings()" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-500 block">預定起床時間</label>
+                                <input type="time" id="sleep-wakeup-time" value="07:00" onchange="updateSleepSettings()" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sky-glass-card rounded-2xl p-5 space-y-4">
+                        <div class="flex justify-between items-center pb-2 border-b border-sky-100">
+                            <h3 class="text-sm font-bold text-sky-950 flex items-center gap-2">
+                                <i data-lucide="alarm-clock" class="w-4.5 h-4.5 text-sky-600"></i> 個人自訂鬧鐘
+                            </h3>
+                            <button onclick="openAlarmModal()" class="bg-sky-500/10 text-sky-700 border border-sky-500/20 px-2.5 py-1 rounded-lg text-[10px] font-bold hover:bg-sky-500 hover:text-white transition-all flex items-center gap-1 shadow-sm">
+                                <i data-lucide="plus" class="w-3 h-3"></i> 新增鬧鐘
+                            </button>
+                        </div>
+                        <div id="alarm-list-container" class="space-y-2.5 max-h-60 overflow-y-auto">
+                            <!-- JS 渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右半：計時器與秒錶 -->
+                <div class="space-y-6">
+                    <div class="sky-glass-card rounded-2xl p-5 space-y-4 text-center">
+                        <h3 class="text-sm font-bold text-sky-950 flex items-center gap-2 justify-center">
+                            <i data-lucide="hourglass" class="w-4.5 h-4.5 text-sky-600 animate-pulse"></i> 讀書與運動倒數計時器
+                        </h3>
+                        <div id="timer-display" class="text-4xl font-extrabold font-mono text-sky-950 tracking-wider py-4">
+                            00:00:00
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 pb-2">
+                            <input type="number" id="timer-input-hours" placeholder="時" min="0" max="23" class="bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-center text-slate-800 focus:outline-none">
+                            <input type="number" id="timer-input-mins" placeholder="分" min="0" max="59" class="bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-center text-slate-800 focus:outline-none">
+                            <input type="number" id="timer-input-secs" placeholder="秒" min="0" max="59" class="bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-center text-slate-800 focus:outline-none">
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="timer-control-btn" onclick="toggleTimerCountdown()" class="flex-1 bg-sky-500 text-white text-xs font-black py-2.5 rounded-xl shadow-sm hover:bg-sky-600 transition-all">
+                                開始倒數
+                            </button>
+                            <button onclick="resetTimerCountdown()" class="bg-white hover:bg-slate-50 text-sky-700 border border-sky-200 px-4 rounded-xl shadow-sm">
+                                重設
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 秒錶 -->
+                    <div class="sky-glass-card rounded-2xl p-5 space-y-4 text-center">
+                        <h3 class="text-sm font-bold text-sky-950 flex items-center gap-2 justify-center">
+                            <i data-lucide="stopwatch" class="w-4.5 h-4.5 text-sky-600"></i> 精準運動秒錶
+                        </h3>
+                        <div id="stopwatch-display" class="text-4xl font-extrabold font-mono text-sky-950 tracking-wider py-4">
+                            00:00.00
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="stopwatch-control-btn" onclick="toggleStopwatch()" class="flex-1 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-2.5 rounded-xl shadow-sm transition-all">
+                                開始計時
+                            </button>
+                            <button onclick="lapStopwatch()" class="bg-white hover:bg-slate-50 text-sky-700 border border-sky-200 px-4 rounded-xl text-xs font-bold shadow-sm">
+                                紀錄 Lap
+                            </button>
+                            <button onclick="resetStopwatch()" class="bg-white hover:bg-slate-50 text-sky-700 border border-sky-200 px-4 rounded-xl text-xs font-bold shadow-sm">
+                                重置
+                            </button>
+                        </div>
+                        <div id="stopwatch-laps" class="max-h-24 overflow-y-auto text-left text-[11px] text-slate-500 font-mono space-y-1 mt-2 px-2">
+                            <!-- JS 渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 5: 倒數 -->
+        <section id="tab-countdowns" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-sm font-bold text-sky-950">重要期程倒數</h3>
+                    <p class="text-xs text-slate-500 mt-1">追蹤您的所有關鍵期程，時間秒數滴答不等人。</p>
+                </div>
+                <button onclick="openCountdownModal()" class="bg-gradient-to-r from-sky-500 to-blue-600 text-white px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    新增重要倒數事件
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="countdown-grid">
+                <!-- JS 渲染 -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 彈出模態框：新增/修改任務 -->
+    <div id="modal-task" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white border border-sky-200 w-full max-w-md rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-sky-100 pb-3">
+                <h3 id="task-modal-title" class="text-sm font-extrabold text-sky-950">新增待辦任務</h3>
+                <button type="button" onclick="closeTaskModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            
+            <input type="hidden" id="task-modal-id">
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-500">任務名稱</label>
+                <input type="text" id="task-modal-name" placeholder="例如：英文文法重點複習 📝" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-500">詳情說明 / 課室 / 筆記</label>
+                <textarea id="task-modal-desc" placeholder="輸入工作詳情..." class="w-full h-16 bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">分類標籤</label>
+                    <select id="task-modal-category" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                        <!-- JS 渲染 -->
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">優先級別</label>
+                    <select id="task-modal-priority" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                        <option value="high">高優先</option>
+                        <option value="medium" selected>中優先</option>
+                        <option value="low">低優先</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 🌟 新增：時間規劃模式選擇（單一時間、持續時間、指定時長） -->
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-500">時間規劃模式</label>
+                <select id="task-modal-time-type" onchange="toggleTimeTypeFields()" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                    <option value="single" selected>單一截止/提醒時間</option>
+                    <option value="range">持續時間 (起訖時間)</option>
+                    <option value="duration">指定時長 (分鐘)</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1" id="field-start-time-wrapper">
+                    <label id="label-start-time" class="text-[11px] font-bold text-slate-500">日期與時間</label>
+                    <input type="datetime-local" id="task-modal-due" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                </div>
+                <div class="space-y-1 hidden" id="field-end-time-wrapper">
+                    <label class="text-[11px] font-bold text-slate-500">結束日期與時間</label>
+                    <input type="datetime-local" id="task-modal-due-end" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                </div>
+                <div class="space-y-1 hidden" id="field-duration-wrapper">
+                    <label class="text-[11px] font-bold text-slate-500">持續時長 (分鐘)</label>
+                    <input type="number" id="task-modal-duration" value="60" min="5" max="1440" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">狀態</label>
+                    <select id="task-modal-status" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                        <option value="todo">未開始</option>
+                        <option value="in_progress">進行中</option>
+                        <option value="completed">已完成</option>
+                        <option value="delayed">已延後</option>
+                        <option value="cancelled">已取消</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-sky-100">
+                <button type="button" onclick="closeTaskModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-xl">取消</button>
+                <button type="button" onclick="saveTask()" class="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-black py-2 rounded-xl">保存事項</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈出模態框：延遲任務選擇器 -->
+    <div id="modal-delay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[55] hidden p-4">
+        <div class="bg-white border border-sky-200 w-full max-w-sm rounded-2xl p-6 shadow-xl space-y-4">
+            <h3 class="text-sm font-extrabold text-sky-950 flex items-center gap-2">
+                <i data-lucide="clock" class="text-amber-500 animate-pulse"></i> 延後此任務排程
+            </h3>
+            <p class="text-xs text-slate-500">請設定您要將此項工作延期至何時執行？</p>
+            <input type="hidden" id="delay-task-id">
+            
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="quickSetDelayDate(1)" class="bg-sky-50 hover:bg-sky-100 text-[11px] font-bold py-2 rounded-lg border border-sky-200 text-sky-800">延後 1 天 (明天)</button>
+                    <button onclick="quickSetDelayDate(7)" class="bg-sky-50 hover:bg-sky-100 text-[11px] font-bold py-2 rounded-lg border border-sky-200 text-sky-800">延後 1 週</button>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-500 block">自訂延後日期時間</label>
+                    <input type="datetime-local" id="delay-custom-date" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-sky-100">
+                <button onclick="closeDelayModal()" class="flex-1 bg-slate-100 text-slate-600 text-xs font-bold py-2 rounded-xl">取消</button>
+                <button onclick="confirmTaskDelay()" class="flex-1 bg-amber-500 text-slate-900 text-xs font-black py-2 rounded-xl">確認延期</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈出模態框：日常習慣課表模板 -->
+    <div id="modal-routine" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white border border-sky-200 w-full max-w-md rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-sky-100 pb-3">
+                <h3 class="text-sm font-extrabold text-sky-950">建立日常例行公事 (課表 / 習慣)</h3>
+                <button onclick="closeRoutineModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-500">例行課表 / 習慣名稱</label>
+                <input type="text" id="routine-modal-name" placeholder="例如：每日背英文單字 📚" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">常規分類</label>
+                    <select id="routine-modal-category" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                        <!-- JS 渲染 -->
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">預計優先級</label>
+                    <select id="routine-modal-priority" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+                        <option value="high">高</option>
+                        <option value="medium" selected>中</option>
+                        <option value="low">低</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-500 block">每週重複天 (選填)</label>
+                <div class="grid grid-cols-7 gap-1 text-center">
+                    <button type="button" onclick="toggleRoutineDay(this, 1)" class="py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-500 font-bold">一</button>
+                    <button type="button" onclick="toggleRoutineDay(this, 2)" class="py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-500 font-bold">二</button>
+                    <button type="button" onclick="toggleRoutineDay(this, 3)" class="py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-500 font-bold">三</button>
+                    <button type="button" onclick="toggleRoutineDay(this, 4)" class="py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-500 font-bold">四</button>
+                    <button type="button" onclick="toggleRoutineDay(this, 5)" class="py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-500 font-bold">五</button>
+                    <button type="button" onclick="toggleRoutineDay(this, 6)" class="py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-500 font-bold">六</button>
+                    <button type="button" onclick="toggleRoutineDay(this, 0)" class="py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-500 font-bold">日</button>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-sky-100">
+                <button onclick="closeRoutineModal()" class="flex-1 bg-slate-100 text-slate-600 text-xs font-bold py-2 rounded-xl">取消</button>
+                <button onclick="saveRoutine()" class="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-black py-2 rounded-xl">建立模板</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈出模態框：自訂鬧鐘 -->
+    <div id="modal-alarm" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white border border-sky-200 w-full max-w-sm rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-sky-100 pb-3">
+                <h3 class="text-sm font-extrabold text-sky-950">新增自訂鬧鐘</h3>
+                <button onclick="closeAlarmModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">鬧鐘時間</label>
+                    <input type="time" id="alarm-modal-time" value="08:00" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-500">標籤說明</label>
+                    <input type="text" id="alarm-modal-label" placeholder="例如：英文單字複習時間..." class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-sky-100">
+                <button onclick="closeAlarmModal()" class="flex-1 bg-slate-100 text-slate-600 text-xs font-bold py-2 rounded-xl">取消</button>
+                <button onclick="saveAlarm()" class="flex-1 bg-sky-500 text-white text-xs font-black py-2 rounded-xl">保存鬧鐘</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈出模態框：新增倒數事件 -->
+    <div id="modal-countdown" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white border border-sky-200 w-full max-w-sm rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-sky-100 pb-3">
+                <h3 class="text-sm font-extrabold text-sky-950">新增倒數</h3>
+                <button onclick="closeCountdownModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-500">事件標題</label>
+                <input type="text" id="countdown-modal-title" placeholder="例如：重要大考 🎯" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-500">目標日期時間</label>
+                <input type="datetime-local" id="countdown-modal-date" class="w-full bg-white border border-sky-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none">
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-sky-100">
+                <button onclick="closeCountdownModal()" class="flex-1 bg-slate-100 text-slate-600 text-xs font-bold py-2 rounded-xl">取消</button>
+                <button onclick="saveCountdown()" class="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-black py-2 rounded-xl">建立倒數</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈出模態框：管理分類色彩 -->
+    <div id="modal-category" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white border border-sky-200 w-full max-w-md rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-sky-100 pb-3">
+                <h3 class="text-sm font-extrabold text-sky-950">管理分類標籤與色彩</h3>
+                <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <!-- 新增自訂分類 -->
+            <div class="bg-sky-50/50 p-3 rounded-xl border border-sky-100 space-y-3">
+                <span class="text-[10px] font-bold text-sky-800 block uppercase">創立全新分類</span>
+                <div class="grid grid-cols-3 gap-2">
+                    <input type="text" id="cat-modal-name" placeholder="分類名稱..." class="col-span-2 bg-white border border-sky-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none">
+                    <input type="color" id="cat-modal-color" value="#0ea5e9" class="w-full h-8 bg-transparent border-0 cursor-pointer rounded-lg">
+                </div>
+                <button onclick="addNewCategory()" class="w-full bg-sky-500 text-white text-xs font-black py-1.5 rounded-lg transition-all flex items-center justify-center gap-1">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增此分類
+                </button>
+            </div>
+
+            <!-- 現有清單 -->
+            <div class="space-y-2">
+                <span class="text-[10px] font-bold text-sky-800 block uppercase">現有分類列表</span>
+                <div id="cat-list-wrapper" class="max-h-40 overflow-y-auto space-y-2 pr-1">
+                    <!-- JS 渲染 -->
+                </div>
+            </div>
+
+            <button onclick="closeCategoryModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl">關閉視窗</button>
+        </div>
+    </div>
+
+    <!-- 鬧鐘響起彈窗 -->
+    <div id="modal-alarm-ringing" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[100] hidden p-4">
+        <div class="bg-white border-2 border-sky-400 w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center space-y-6 animate-bounce" style="animation-duration: 3s;">
+            <div class="w-16 h-16 bg-sky-500/10 text-sky-500 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                <i data-lucide="bell-ring" class="w-8 h-8"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-sky-600">⏰ 時空秘書鬧鐘響起</h3>
+                <p id="alarm-ringing-label" class="text-sm text-slate-700 mt-2">提醒您該行動囉！</p>
+                <p id="alarm-ringing-time" class="text-xs text-slate-400 mt-1 font-mono">--:--</p>
+            </div>
+            <button onclick="dismissAlarmRinging()" class="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white font-black py-3 rounded-2xl shadow-md hover:from-sky-400 hover:to-blue-500 transition-all">
+                關閉鬧鐘
+            </button>
+        </div>
+    </div>
+
+    <!-- 隨身懸浮快速新增事項按鍵 -->
+    <div class="fixed bottom-6 right-6 z-40 flex flex-col gap-2">
+        <button onclick="openTaskModal()" class="w-14 h-14 bg-gradient-to-tr from-sky-500 via-sky-400 to-blue-500 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-all" title="快速新增任何事項">
+            <i data-lucide="plus" class="w-7 h-7"></i>
+        </button>
+    </div>
+
+    <!-- 提示吐司 -->
+    <div id="toast" class="fixed bottom-24 right-6 bg-white border border-sky-300 text-slate-800 px-5 py-3.5 rounded-2xl shadow-xl z-[9999] flex items-center gap-2.5 text-xs opacity-0 translate-y-2 transition-all duration-300 pointer-events-none">
+        <div class="bg-sky-500/10 p-1.5 rounded-lg text-sky-500">
+            <i data-lucide="bell" class="w-4 h-4"></i>
+        </div>
+        <span id="toast-text" class="font-bold"></span>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 100% 本地狀態池
+        const DEFAULT_STATE = {
+            tasks: [],
+            categories: [
+                { id: 'cat-work', name: '核心任務', color: '#0ea5e9' },
+                { id: 'cat-study', name: '學術修習', color: '#3b82f6' },
+                { id: 'cat-life', name: '個人生活', color: '#10b981' },
+                { id: 'cat-routine', name: '日常例行', color: '#a855f7' }
+            ],
+            routines: [],
+            countdowns: [],
+            journals: {},
+            sleepSettings: {
+                expectedSleepTime: '23:00',
+                wakeupTime: '07:00',
+                reminderEnabled: true
+            },
+            alarms: [],
+            focusTimer: {
+                duration: 25 * 60,
+                timeLeft: 25 * 60,
+                isRunning: false,
+                mode: 'focus', 
+                audioSourceType: 'link', 
+                audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                audioTitle: '天藍 Lofi',
+                volume: 0.5
+            },
+            activeTab: 'dashboard'
+        };
+
+        let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        let focusAudioElement = null;
+        let focusInterval = null;
+
+        // 智慧鬧鐘與計時
+        let isRingingNow = false;
+        let activeRingingAlarm = null;
+        let audioCtx = null;
+        let ringToneInterval = null;
+        let timerSecondsLeft = 0;
+        let timerInterval = null;
+        let timerIsRunning = false;
+        let stopwatchTime = 0; 
+        let stopwatchInterval = null;
+        let stopwatchIsRunning = false;
+        let stopwatchLaps = [];
+
+        // 跨時空檢視狀態
+        let currentDashboardView = 'day';
+        let selectedCalendarDate = '';
+        let temporaryRoutineDays = [];
+        let dashboardJournalDate = null; // 追蹤行事曆中日記已載入的日期，避免重繪時清空輸入
+
+        // ==========================================
+        // 🔄 系統生命週期與載入
+        // ==========================================
+        window.onload = function() {
+            loadStateFromLocalStorage();
+            initAudioPlayer();
+            initLucideIcons();
+
+            // 預設切換為今日日期
+            const todayStr = new Date().toISOString().split('T')[0];
+            selectedCalendarDate = todayStr;
+            
+            const dateInput = document.getElementById("calendar-date-input");
+            if (dateInput) {
+                dateInput.value = selectedCalendarDate;
+            }
+
+            startSystemClock();
+            switchTab(state.activeTab);
+            renderAll();
+        };
+
+        function saveStateToLocalStorage() {
+            try {
+                localStorage.setItem('timeflow_studio_state_v5', JSON.stringify(state));
+            } catch (e) {
+                console.warn("LocalStorage 寫入失敗");
+            }
+        }
+
+        function loadStateFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('timeflow_studio_state_v5');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    state = Object.assign({}, DEFAULT_STATE, parsed);
+                    
+                    if (!Array.isArray(state.tasks)) state.tasks = [];
+                    if (!Array.isArray(state.categories) || state.categories.length === 0) {
+                        state.categories = JSON.parse(JSON.stringify(DEFAULT_STATE.categories));
+                    }
+                    if (!Array.isArray(state.routines)) state.routines = [];
+                    if (!Array.isArray(state.countdowns)) state.countdowns = [];
+                    if (typeof state.journals !== 'object' || state.journals === null) state.journals = {};
+                    if (!Array.isArray(state.alarms)) state.alarms = [];
+                    
+                    state.focusTimer.isRunning = false;
+                    state.focusTimer.timeLeft = state.focusTimer.duration;
+
+                    // 日常公事與日記已併入行事曆，舊的分頁標籤需回退到行事曆
+                    const validTabs = ['dashboard', 'tasks', 'countdowns', 'focus', 'sleep'];
+                    if (!validTabs.includes(state.activeTab)) state.activeTab = 'dashboard';
+                }
+            } catch (e) {
+                state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            }
+        }
+
+        function resetToDemoData() {
+            state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            saveStateToLocalStorage();
+            if (focusAudioElement) {
+                focusAudioElement.pause();
+                focusAudioElement.src = state.focusTimer.audioUrl;
+            }
+            clearInterval(focusInterval);
+            renderAll();
+            showToast("✨ 時空資料庫已完全重設清空！");
+        }
+
+        function initLucideIcons() {
+            try {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            } catch (e) {
+                console.warn("Lucide 圖標初始化失敗");
+            }
+        }
+
+        function startSystemClock() {
+            setInterval(() => {
+                const now = new Date();
+                const clock = document.getElementById("dashboard-clock");
+                if (clock) {
+                    clock.textContent = now.toTimeString().split(' ')[0];
+                }
+                checkAlarmsAndSleepReminder(now);
+            }, 1000);
+        }
+
+        // ==========================================
+        // 📑 分頁切換器
+        // ==========================================
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            
+            ['dashboard', 'tasks', 'countdowns', 'focus', 'sleep'].forEach(id => {
+                const sec = document.getElementById(`tab-${id}`);
+                const btn = document.getElementById(`menu-${id}`);
+                if (sec) sec.classList.add("hidden");
+                if (btn) {
+                    btn.className = "snap-start flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-sky-800 hover:bg-sky-100/50 hover:text-sky-950 transition-all duration-300";
+                }
+            });
+
+            const activeSec = document.getElementById(`tab-${tabId}`);
+            const activeBtn = document.getElementById(`menu-${tabId}`);
+            if (activeSec) activeSec.classList.remove("hidden");
+            if (activeBtn) {
+                activeBtn.className = "snap-start flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-sky-500 text-white shadow-sm";
+                activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function renderAll() {
+            const todoBadge = document.getElementById("badge-todo-count");
+            if (todoBadge) {
+                todoBadge.textContent = state.tasks.filter(t => t.status !== 'completed' && t.status !== 'cancelled').length;
+            }
+            const cdBadge = document.getElementById("badge-countdown-count");
+            if (cdBadge) {
+                cdBadge.textContent = state.countdowns.length;
+            }
+
+            const indicator = document.getElementById("sleep-reminder-indicator");
+            const indicatorTime = document.getElementById("sleep-indicator-time");
+            if (indicator && indicatorTime) {
+                if (state.sleepSettings.reminderEnabled) {
+                    indicator.classList.remove("hidden");
+                    indicator.classList.add("flex");
+                    indicatorTime.textContent = state.sleepSettings.expectedSleepTime;
+                } else {
+                    indicator.classList.remove("flex");
+                    indicator.classList.add("hidden");
+                }
+            }
+
+            if (state.activeTab === 'dashboard') {
+                renderDashboardView();
+                renderRoutines();
+            } else if (state.activeTab === 'tasks') {
+                renderTasks();
+            } else if (state.activeTab === 'countdowns') {
+                renderCountdowns();
+            } else if (state.activeTab === 'focus') {
+                updateFocusUI();
+            } else if (state.activeTab === 'sleep') {
+                renderAlarms();
+                updateTimerUI();
+                updateStopwatchUI();
+            }
+
+            initLucideIcons();
+        }
+
+        // ==========================================
+        // 📅 TAB 0: 跨時空檢視 - 日曆控制與檢視設定
+        // ==========================================
+        function setDashboardView(view) {
+            currentDashboardView = view;
+            ['day', 'week', 'month', 'year'].forEach(v => {
+                const container = document.getElementById(`view-${v}-container`);
+                const btn = document.getElementById(`view-btn-${v}`);
+                if (container) container.classList.add("hidden");
+                if (btn) {
+                    btn.className = "px-4 py-2 rounded-lg text-xs font-bold transition-all text-sky-800 hover:text-sky-950";
+                }
+            });
+
+            const activeContainer = document.getElementById(`view-${view}-container`);
+            const activeBtn = document.getElementById(`view-btn-${view}`);
+            if (activeContainer) activeContainer.classList.remove("hidden");
+            if (activeBtn) {
+                activeBtn.className = "px-4 py-2 rounded-lg text-xs font-bold transition-all text-white bg-sky-500 shadow";
+            }
+
+            renderDashboardView();
+        }
+
+        function shiftCalendarDate(amount) {
+            const current = new Date(selectedCalendarDate);
+            if (currentDashboardView === 'week') {
+                current.setDate(current.getDate() + amount * 7);
+            } else if (currentDashboardView === 'month') {
+                current.setMonth(current.getMonth() + amount);
+            } else if (currentDashboardView === 'year') {
+                current.setFullYear(current.getFullYear() + amount);
+            } else {
+                current.setDate(current.getDate() + amount);
+            }
+            selectedCalendarDate = current.toISOString().split('T')[0];
+            document.getElementById("calendar-date-input").value = selectedCalendarDate;
+            renderDashboardView();
+        }
+
+        function onCalendarDateChanged() {
+            selectedCalendarDate = document.getElementById("calendar-date-input").value;
+            renderDashboardView();
+        }
+
+        function renderDashboardView() {
+            updateCalendarMainLabel();
+            if (currentDashboardView === 'day') {
+                renderDayTimelineGrid();
+            } else if (currentDashboardView === 'week') {
+                renderWeekView();
+            } else if (currentDashboardView === 'month') {
+                renderMonthView();
+            } else if (currentDashboardView === 'year') {
+                renderYearView();
+            }
+            // 日記跟隨行事曆所選日期；僅在日期變動時重載心情與文字，避免清空未存內容
+            const jDate = document.getElementById("journal-date");
+            if (jDate) {
+                if (dashboardJournalDate !== selectedCalendarDate) {
+                    jDate.value = selectedCalendarDate;
+                    loadJournalEntry();
+                    dashboardJournalDate = selectedCalendarDate;
+                } else {
+                    renderJournalAchievements(selectedCalendarDate);
+                }
+            }
+        }
+
+        // 行事曆主標題（含年份）
+        function updateCalendarMainLabel() {
+            const el = document.getElementById("calendar-main-label");
+            if (!el || !selectedCalendarDate) return;
+            const d = new Date(selectedCalendarDate);
+            const y = d.getFullYear();
+            const m = d.getMonth() + 1;
+            const day = d.getDate();
+            const wd = ["日", "一", "二", "三", "四", "五", "六"][d.getDay()];
+            if (currentDashboardView === 'day') {
+                el.textContent = `${y} 年 ${m} 月 ${day} 日　星期${wd}`;
+            } else if (currentDashboardView === 'week') {
+                const start = new Date(selectedCalendarDate);
+                const cd = start.getDay();
+                start.setDate(start.getDate() - (cd === 0 ? 6 : cd - 1));
+                const end = new Date(start);
+                end.setDate(end.getDate() + 6);
+                const fmt = (dt) => `${dt.getMonth() + 1}/${dt.getDate()}`;
+                el.textContent = `${start.getFullYear()} 年　${fmt(start)} – ${fmt(end)}（本周）`;
+            } else if (currentDashboardView === 'year') {
+                el.textContent = `${y} 年`;
+            } else {
+                el.textContent = `${y} 年 ${m} 月`;
+            }
+        }
+
+        // 🌟 Apple 日曆 & TimeTree 連續事件塊渲染演算法 (支援自訂起訖與持續時間)
+        function renderDayTimelineGrid() {
+            // 1. 小時標籤
+            const hourLabelsCol = document.getElementById("timeline-hour-labels");
+            if (hourLabelsCol) {
+                hourLabelsCol.innerHTML = "";
+                for (let h = 0; h < 24; h++) {
+                    const labelDiv = document.createElement("div");
+                    labelDiv.className = "h-[60px] text-[10px] font-mono font-bold text-sky-600/80 pr-2 pt-[2px]";
+                    labelDiv.textContent = `${String(h).padStart(2, '0')}:00`;
+                    hourLabelsCol.appendChild(labelDiv);
+                }
+            }
+
+            // 2. 虛線網格背景
+            const gridLines = document.getElementById("timeline-grid-lines");
+            if (gridLines) {
+                gridLines.innerHTML = "";
+                for (let h = 0; h < 24; h++) {
+                    const hourRow = document.createElement("div");
+                    hourRow.className = "h-[60px] relative border-b border-sky-100/40 w-full";
+                    
+                    const halfHourLine = document.createElement("div");
+                    halfHourLine.className = "absolute top-[30px] left-0 w-full border-t border-dashed border-sky-100/20";
+                    
+                    hourRow.appendChild(halfHourLine);
+                    gridLines.appendChild(hourRow);
+                }
+            }
+
+            // 3. 解析與定位事件卡片
+            const holder = document.getElementById("timeline-events-holder");
+            if (!holder) return;
+            holder.innerHTML = "";
+
+            const targetDay = selectedCalendarDate;
+            const dayTasks = state.tasks.filter(t => t.due && t.due.startsWith(targetDay));
+
+            const parsedTasks = dayTasks.map(t => {
+                let startMins = 720; // 預設 12:00
+                let startTimeStr = "12:00";
+                
+                if (t.due) {
+                    const parts = (t.due.includes('T') ? t.due.split('T')[1] : t.due.split(' ')[1] || "12:00").split(':');
+                    const h = parseInt(parts[0], 10) || 12;
+                    const m = parseInt(parts[1], 10) || 0;
+                    startMins = h * 60 + m;
+                    startTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                }
+
+                // 計算動態結束時間 (持續時間解算)
+                let endMins = startMins + 60; // 預設 1 小時
+                let endTimeStr = "";
+
+                if (t.timeType === 'range' && t.dueEnd) {
+                    const endParts = (t.dueEnd.includes('T') ? t.dueEnd.split('T')[1] : t.dueEnd.split(' ')[1] || "13:00").split(':');
+                    const eh = parseInt(endParts[0], 10) || 13;
+                    const em = parseInt(endParts[1], 10) || 0;
+                    endMins = eh * 60 + em;
+                    // 若結束時間跨天或小於開始，安全校正
+                    if (endMins <= startMins) endMins = startMins + 30;
+                    endTimeStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+                } else if (t.timeType === 'duration' && t.duration) {
+                    const dur = parseInt(t.duration, 10) || 60;
+                    endMins = startMins + dur;
+                    
+                    const eh = Math.floor(endMins / 60) % 24;
+                    const em = endMins % 60;
+                    endTimeStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+                } else {
+                    const eh = Math.floor(endMins / 60) % 24;
+                    const em = endMins % 60;
+                    endTimeStr = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+                }
+
+                return {
+                    ...t,
+                    totalMins: startMins,
+                    endMins: Math.min(1440, endMins),
+                    startTimeStr,
+                    endTimeStr
+                };
+            }).sort((a, b) => a.totalMins - b.totalMins);
+
+            // 🌟 智慧 TimeTree 雙向避讓並排卡片打包演算法 (Collision Columns)
+            const columns = [];
+            parsedTasks.forEach(task => {
+                let colIndex = 0;
+                while (true) {
+                    if (!columns[colIndex]) {
+                        columns[colIndex] = [];
+                    }
+                    const hasOverlap = columns[colIndex].some(other => {
+                        return task.totalMins < other.endMins && other.totalMins < task.endMins;
+                    });
+                    if (!hasOverlap) {
+                        columns[colIndex].push(task);
+                        task.colIndex = colIndex;
+                        break;
+                    }
+                    colIndex++;
+                }
+            });
+
+            const totalCols = columns.length || 1;
+
+            parsedTasks.forEach(t => {
+                const cat = state.categories.find(c => c.id === t.categoryId) || { name: '日常例行', color: '#a855f7' };
+                const isDone = t.status === 'completed';
+                
+                let statusBadge = "";
+                if (t.status === 'completed') statusBadge = `<span class="bg-emerald-100 text-emerald-700 text-[8px] px-1 py-0.5 rounded border border-emerald-200 font-bold shrink-0">完成</span>`;
+                else if (t.status === 'delayed') statusBadge = `<span class="bg-amber-100 text-amber-700 text-[8px] px-1 py-0.5 rounded border border-amber-200 font-bold shrink-0">延後</span>`;
+                else if (t.status === 'cancelled') statusBadge = `<span class="bg-rose-100 text-rose-700 text-[8px] px-1 py-0.5 rounded border border-rose-200 font-bold shrink-0">取消</span>`;
+                else statusBadge = `<span class="bg-sky-100 text-sky-700 text-[8px] px-1 py-0.5 rounded border border-sky-200 font-bold shrink-0">待辦</span>`;
+
+                const colWidth = 100 / totalCols;
+                const leftOffset = t.colIndex * colWidth;
+                const heightVal = Math.max(35, t.endMins - t.totalMins);
+
+                const card = document.createElement("div");
+                card.className = "absolute rounded-xl border border-sky-100/90 shadow-sm overflow-hidden flex flex-col justify-between p-2 bg-white/95 transition-all hover:shadow-md hover:scale-[1.01] hover:z-20";
+                
+                card.style.top = `${t.totalMins}px`;
+                card.style.height = `${heightVal - 6}px`; 
+                card.style.left = `calc(${leftOffset}% + 6px)`;
+                card.style.width = `calc(${colWidth}% - 12px)`;
+                
+                card.innerHTML = `
+                    <div class="absolute top-0 left-0 w-1.5 h-full" style="background-color: ${cat.color}"></div>
+                    <div class="pl-2 pr-1.5 flex-1 min-w-0 flex flex-col justify-between h-full">
+                        <div class="flex items-center justify-between gap-1 w-full">
+                            <span class="text-[9px] font-mono font-bold text-sky-700/80 truncate">
+                                ${t.startTimeStr} - ${t.endTimeStr}
+                            </span>
+                            ${statusBadge}
+                        </div>
+                        <h4 class="text-[11px] font-extrabold ${isDone ? 'line-through text-slate-400' : 'text-slate-800'} truncate leading-tight">${t.name}</h4>
+                        <div class="flex justify-end items-center gap-1.5 scale-90 origin-right">
+                            <button onclick="editTask('${t.id}', event)" class="text-slate-400 hover:text-sky-600 p-0.5"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="deleteTask('${t.id}', event)" class="text-slate-400 hover:text-rose-500 p-0.5"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    </div>
+                `;
+                
+                holder.appendChild(card);
+            });
+
+            // 4. 點擊虛線新增
+            const gridRows = gridLines.children;
+            for (let h = 0; h < 24; h++) {
+                const quickAddBtn = document.createElement("button");
+                quickAddBtn.className = "absolute right-2 top-1.5 opacity-0 hover:opacity-100 p-1 bg-sky-500 text-white rounded-lg transition-all z-10 shadow-sm scale-90";
+                quickAddBtn.innerHTML = `<i data-lucide="plus" class="w-3.5 h-3.5"></i>`;
+                quickAddBtn.onclick = (e) => {
+                    openTaskAtTime(`${String(h).padStart(2, '0')}:00`, e);
+                };
+                gridRows[h].appendChild(quickAddBtn);
+            }
+
+            const timelineContainer = document.getElementById("day-timeline-events-container");
+            if (timelineContainer) {
+                timelineContainer.onclick = function(e) {
+                    if (e.target.closest('.rounded-xl.border') || e.target.closest('button')) {
+                        return;
+                    }
+                    const rect = timelineContainer.getBoundingClientRect();
+                    const relativeY = e.clientY - rect.top; 
+                    const totalMinutes = Math.min(1439, Math.max(0, Math.round(relativeY)));
+                    const hour = Math.floor(totalMinutes / 60);
+                    const minute = Math.floor((totalMinutes % 60) / 30) * 30;
+                    
+                    const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    openTaskAtTime(timeStr, e);
+                };
+            }
+
+            renderDayRoutineShortcuts();
+            initLucideIcons();
+
+            setTimeout(() => {
+                const container = document.getElementById("day-timeline-scroll-container");
+                if (container && container.scrollTop === 0) {
+                    container.scrollTop = 420; 
+                }
+            }, 50);
+        }
+
+        function openTaskAtTime(timeStr, event) {
+            if (event) event.stopPropagation();
+            openTaskModal();
+            document.getElementById("task-modal-due").value = `${selectedCalendarDate}T${timeStr}`;
+        }
+
+        function renderDayRoutineShortcuts() {
+            const container = document.getElementById("day-routine-shortcuts");
+            if (!container) return;
+            container.innerHTML = "";
+
+            if (state.routines.length === 0) {
+                container.innerHTML = `<span class="text-[10px] text-slate-400 block text-center py-4">目前尚無例行模板。</span>`;
+                return;
+            }
+
+            state.routines.forEach(r => {
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left bg-white/90 hover:bg-sky-50 border border-sky-100 text-[11px] p-2.5 rounded-xl text-sky-900 font-bold flex items-center justify-between shadow-sm transition-all";
+                btn.innerHTML = `
+                    <span class="truncate text-slate-700">${r.name}</span>
+                    <span class="text-[9px] text-sky-600 flex items-center gap-0.5 font-bold"><i data-lucide="send" class="w-3 h-3"></i> 派發</span>
+                `;
+                btn.onclick = (e) => {
+                    dispatchRoutineToTasksOnDate(r.id, selectedCalendarDate, e);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderWeekView() {
+            const grid = document.getElementById("week-view-grid");
+            if (!grid) return;
+
+            const startOfWeek = new Date(selectedCalendarDate);
+            const currentDay = startOfWeek.getDay();
+            startOfWeek.setDate(startOfWeek.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
+
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const target = new Date(startOfWeek);
+                target.setDate(target.getDate() + i);
+                weekDates.push(target.toISOString().split('T')[0]);
+            }
+            const dayLabels = ["一", "二", "三", "四", "五", "六", "日"];
+
+            // 偵測「全螢幕橫屏」：周一~周五在左、周六日與當周待辦在右
+            const landscape = window.innerWidth > window.innerHeight;
+            const isFsLandscape = !!document.fullscreenElement && landscape;
+
+            if (isFsLandscape) {
+                grid.className = "grid grid-cols-1 lg:grid-cols-3 gap-4";
+                let leftHtml = '<div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-5 gap-3">';
+                for (let i = 0; i < 5; i++) leftHtml += buildWeekDayCard(weekDates[i], dayLabels[i]);
+                leftHtml += '</div>';
+
+                let rightHtml = '<div class="grid grid-cols-1 gap-3">';
+                rightHtml += buildWeekDayCard(weekDates[5], dayLabels[5]);
+                rightHtml += buildWeekDayCard(weekDates[6], dayLabels[6]);
+                rightHtml += buildWeekTodoPanel(weekDates);
+                rightHtml += '</div>';
+
+                grid.innerHTML = leftHtml + rightHtml;
+            } else {
+                grid.className = "grid grid-cols-1 md:grid-cols-7 gap-4";
+                let html = "";
+                for (let i = 0; i < 7; i++) html += buildWeekDayCard(weekDates[i], dayLabels[i]);
+                grid.innerHTML = html;
+            }
+            initLucideIcons();
+        }
+
+        function buildWeekDayCard(dateStr, dayLabel) {
+            const dayTasks = state.tasks.filter(t => t.due && t.due.startsWith(dateStr));
+            const isSelected = selectedCalendarDate === dateStr;
+            const [yy, mm, dd] = dateStr.split('-');
+
+            let taskListHtml = "";
+            if (dayTasks.length === 0) {
+                taskListHtml = `<div class="text-[10px] text-slate-400 text-center py-6">無排程</div>`;
+            } else {
+                dayTasks.forEach(t => {
+                    const cat = state.categories.find(c => c.id === t.categoryId) || { color: '#64748b' };
+                    const isDone = t.status === 'completed';
+                    taskListHtml += `
+                        <div class="bg-white p-2 rounded-lg border border-sky-100 text-[10px] flex items-center justify-between gap-1 ${isDone ? 'opacity-50' : ''}">
+                            <div class="flex items-center gap-1 min-w-0">
+                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${cat.color}"></span>
+                                <span class="font-bold text-slate-700 truncate ${isDone ? 'line-through' : ''}">${t.name}</span>
+                            </div>
+                            <div class="flex items-center gap-0.5 shrink-0">
+                                <button onclick="editTask('${t.id}', event)" class="text-slate-400 hover:text-sky-600 p-0.5"><i data-lucide="pencil" class="w-2.5 h-2.5"></i></button>
+                                <button onclick="deleteTask('${t.id}', event)" class="text-slate-400 hover:text-rose-500 p-0.5"><i data-lucide="trash-2" class="w-2.5 h-2.5"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            return `
+                <div class="sky-glass-card rounded-2xl p-3 flex flex-col min-h-[220px] border ${isSelected ? 'border-sky-400 shadow-md ring-1 ring-sky-300' : 'border-sky-100'}">
+                    <div class="text-center pb-2 border-b border-sky-100 mb-3 cursor-pointer" onclick="selectDateFromWeek('${dateStr}')">
+                        <span class="block text-[11px] font-black text-sky-600">星期${dayLabel}</span>
+                        <span class="block text-xs font-mono font-black text-slate-600">${mm}/${dd}</span>
+                        <span class="block text-[9px] text-slate-400 font-mono">${yy} 年</span>
+                    </div>
+                    <div class="flex-1 space-y-2 overflow-y-auto">
+                        ${taskListHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function buildWeekTodoPanel(weekDates) {
+            const weekSet = new Set(weekDates);
+            const weekTodos = state.tasks
+                .filter(t => t.due && weekSet.has(t.due.split('T')[0]) && t.status !== 'completed' && t.status !== 'cancelled')
+                .sort((a, b) => (a.due || '').localeCompare(b.due || ''));
+
+            let itemsHtml = "";
+            if (weekTodos.length === 0) {
+                itemsHtml = `<div class="text-[10px] text-slate-400 text-center py-6">本周暫無待辦</div>`;
+            } else {
+                weekTodos.forEach(t => {
+                    const cat = state.categories.find(c => c.id === t.categoryId) || { color: '#64748b' };
+                    const md = t.due ? t.due.split('T')[0].substring(5) : '';
+                    itemsHtml += `
+                        <div class="bg-white p-2 rounded-lg border border-sky-100 text-[10px] flex items-center justify-between gap-1">
+                            <div class="flex items-center gap-1 min-w-0">
+                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${cat.color}"></span>
+                                <span class="font-mono text-slate-400 shrink-0">${md}</span>
+                                <span class="font-bold text-slate-700 truncate">${t.name}</span>
+                            </div>
+                            <div class="flex items-center gap-0.5 shrink-0">
+                                <button onclick="editTask('${t.id}', event)" class="text-slate-400 hover:text-sky-600 p-0.5"><i data-lucide="pencil" class="w-2.5 h-2.5"></i></button>
+                                <button onclick="deleteTask('${t.id}', event)" class="text-slate-400 hover:text-rose-500 p-0.5"><i data-lucide="trash-2" class="w-2.5 h-2.5"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            return `
+                <div class="sky-glass-card rounded-2xl p-3 flex flex-col border border-sky-200">
+                    <div class="pb-2 border-b border-sky-100 mb-3 flex items-center gap-1.5">
+                        <i data-lucide="check-square" class="w-4 h-4 text-sky-600"></i>
+                        <span class="text-[11px] font-black text-slate-700">當周待辦事項</span>
+                        <span class="ml-auto text-[9px] bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full font-bold">${weekTodos.length}</span>
+                    </div>
+                    <div class="flex-1 space-y-2 overflow-y-auto max-h-[320px]">
+                        ${itemsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectDateFromWeek(dateStr) {
+            selectedCalendarDate = dateStr;
+            const di = document.getElementById("calendar-date-input");
+            if (di) di.value = dateStr;
+            renderDashboardView();
+        }
+
+        function openTaskOnDate(dateStr, event) {
+            if (event) event.stopPropagation();
+            openTaskModal();
+            document.getElementById("task-modal-due").value = `${dateStr}T12:00`;
+        }
+
+        function renderMonthView() {
+            const grid = document.getElementById("month-view-grid");
+            const label = document.getElementById("month-view-label");
+            if (!grid) return;
+            grid.innerHTML = "";
+
+            const target = new Date(selectedCalendarDate);
+            const year = target.getFullYear();
+            const month = target.getMonth(); 
+
+            if (label) {
+                label.textContent = `${year} 年 ${month + 1} 月`;
+            }
+
+            const firstDay = new Date(year, month, 1).getDay(); 
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            const totalBlank = firstDay === 0 ? 6 : firstDay - 1; 
+            for (let i = 0; i < totalBlank; i++) {
+                const cell = document.createElement("div");
+                cell.className = "h-14 bg-sky-50/10 rounded-xl border border-transparent";
+                grid.appendChild(cell);
+            }
+
+            for (let d = 1; d <= totalDays; d++) {
+                const cellDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const isToday = selectedCalendarDate === cellDate;
+
+                const cellTasks = state.tasks.filter(t => t.due && t.due.startsWith(cellDate));
+
+                const cell = document.createElement("div");
+                cell.className = `group h-14 bg-white/50 hover:bg-white p-1.5 rounded-xl border cursor-pointer flex flex-col justify-between transition-all ${
+                    isToday ? 'border-sky-400 ring-1 ring-sky-300 bg-white' : 'border-sky-100'
+                }`;
+                cell.onclick = () => {
+                    selectedCalendarDate = cellDate;
+                    document.getElementById("calendar-date-input").value = cellDate;
+                    renderDashboardView();
+                };
+
+                let dotHtml = "";
+                if (cellTasks.length > 0) {
+                    dotHtml = `<span class="w-1.5 h-1.5 bg-sky-500 rounded-full animate-pulse shadow-[0_0_6px_#0ea5e9]"></span>`;
+                }
+
+                cell.innerHTML = `
+                    <div class="flex justify-between items-center w-full">
+                        <span class="text-[11px] font-mono font-black ${isToday ? 'text-sky-600 font-extrabold' : 'text-slate-500'}">${d}</span>
+                        <button onclick="openTaskOnDate('${cellDate}', event)" class="opacity-0 group-hover:opacity-100 p-0.5 bg-sky-500 text-white rounded transition-all scale-75" title="在此日期快速新增排程">
+                            <i data-lucide="plus" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    <div class="flex justify-end">
+                        ${dotHtml}
+                    </div>
+                `;
+                grid.appendChild(cell);
+            }
+        }
+
+        // 年檢視：整年 12 個月迷你日曆
+        function renderYearView() {
+            const grid = document.getElementById("year-view-grid");
+            if (!grid) return;
+
+            const year = new Date(selectedCalendarDate).getFullYear();
+            const todayStr = new Date().toISOString().split('T')[0];
+            const taskDates = new Set(state.tasks.filter(t => t.due).map(t => t.due.split('T')[0]));
+            const weekHead = ["一", "二", "三", "四", "五", "六", "日"];
+
+            let html = "";
+            for (let m = 0; m < 12; m++) {
+                const firstDay = new Date(year, m, 1).getDay();
+                const totalDays = new Date(year, m + 1, 0).getDate();
+                const blanks = firstDay === 0 ? 6 : firstDay - 1;
+
+                let cells = "";
+                for (let i = 0; i < blanks; i++) cells += `<div></div>`;
+                for (let d = 1; d <= totalDays; d++) {
+                    const cellDate = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const isSelected = selectedCalendarDate === cellDate;
+                    const isToday = todayStr === cellDate;
+                    const hasTask = taskDates.has(cellDate);
+                    let cls = "relative flex items-center justify-center h-6 rounded-md cursor-pointer text-[10px] font-mono ";
+                    if (isSelected) cls += "bg-sky-500 text-white font-black";
+                    else if (isToday) cls += "ring-1 ring-sky-400 text-sky-700 font-bold";
+                    else cls += "text-slate-600 hover:bg-sky-50";
+                    const dot = (hasTask && !isSelected) ? `<span class="absolute bottom-0.5 w-1 h-1 rounded-full bg-sky-500"></span>` : "";
+                    cells += `<div class="${cls}" onclick="selectDateFromYear('${cellDate}')">${d}${dot}</div>`;
+                }
+
+                html += `
+                    <div class="bg-white border border-sky-100 rounded-2xl p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <button onclick="openMonthFromYear(${m})" class="text-xs font-bold text-sky-700 hover:text-sky-900">${m + 1} 月</button>
+                        </div>
+                        <div class="grid grid-cols-7 gap-0.5 text-center text-[8px] font-bold text-slate-400 mb-1">
+                            ${weekHead.map(w => `<div>${w}</div>`).join('')}
+                        </div>
+                        <div class="grid grid-cols-7 gap-0.5 text-center">
+                            ${cells}
+                        </div>
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+            initLucideIcons();
+        }
+
+        function selectDateFromYear(dateStr) {
+            selectedCalendarDate = dateStr;
+            const di = document.getElementById("calendar-date-input");
+            if (di) di.value = dateStr;
+            setDashboardView('day');
+        }
+
+        function openMonthFromYear(monthIndex) {
+            const year = new Date(selectedCalendarDate).getFullYear();
+            selectedCalendarDate = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+            const di = document.getElementById("calendar-date-input");
+            if (di) di.value = selectedCalendarDate;
+            setDashboardView('month');
+        }
+
+        // ==========================================
+        // 🎯 TAB 1: 任務大師看板
+        // ==========================================
+        function renderTasks() {
+            const searchVal = document.getElementById("task-search").value.toLowerCase();
+            const filterCat = document.getElementById("task-filter-category").value;
+            const filterStatus = document.getElementById("task-filter-status").value;
+
+            updateCategoryDropdowns();
+
+            let filtered = state.tasks.filter(task => {
+                const matchSearch = task.name.toLowerCase().includes(searchVal) || (task.desc && task.desc.toLowerCase().includes(searchVal));
+                const matchCat = filterCat === 'all' || task.categoryId === filterCat;
+                const matchStatus = filterStatus === 'all' || task.status === filterStatus;
+                return matchSearch && matchCat && matchStatus;
+            });
+
+            const lists = {
+                todo: document.getElementById("list-todo"),
+                in_progress: document.getElementById("list-in-progress"),
+                completed: document.getElementById("list-completed"),
+                alternatives: document.getElementById("list-alternatives")
+            };
+
+            for (const key in lists) {
+                if (lists[key]) lists[key].innerHTML = "";
+            }
+
+            const counts = { todo: 0, in_progress: 0, completed: 0, alternatives: 0 };
+
+            filtered.forEach(task => {
+                const cat = state.categories.find(c => c.id === task.categoryId) || { name: '日常例行', color: '#a855f7' };
+                const colorHex = cat.color;
+
+                let priorityBadge = '';
+                if (task.priority === 'high') priorityBadge = `<span class="bg-rose-100 text-rose-700 border border-rose-200 text-[8px] px-1.5 py-0.5 rounded font-bold uppercase">High</span>`;
+                if (task.priority === 'medium') priorityBadge = `<span class="bg-sky-100 text-sky-700 border border-sky-200 text-[8px] px-1.5 py-0.5 rounded font-bold uppercase">Med</span>`;
+                if (task.priority === 'low') priorityBadge = `<span class="bg-slate-100 text-slate-500 border border-slate-200 text-[8px] px-1.5 py-0.5 rounded font-bold uppercase">Low</span>`;
+
+                const dueText = task.due ? task.due.replace('T', ' ').substring(5, 16) : '無排程時間';
+
+                const card = document.createElement("div");
+                card.className = "bg-white/95 border border-sky-100 rounded-xl p-3.5 space-y-3 hover:border-sky-400 transition-all relative overflow-hidden shadow-sm";
+                
+                let titleStyle = "text-slate-800";
+                if (task.status === 'completed') titleStyle = "line-through text-slate-400";
+                else if (task.status === 'delayed') titleStyle = "text-amber-600 italic";
+                else if (task.status === 'cancelled') titleStyle = "line-through text-rose-500/60";
+
+                card.innerHTML = `
+                    <div class="absolute top-0 left-0 w-1.5 h-full" style="background-color: ${colorHex}"></div>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-start gap-1">
+                            <span class="text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0" style="background-color: ${colorHex}15; color: ${colorHex}">
+                                ${cat.name}
+                            </span>
+                            <div class="flex items-center gap-1 min-w-0">
+                                ${priorityBadge}
+                                <span class="text-[9px] text-slate-400 font-mono truncate max-w-[80px]">
+                                    ${dueText}
+                                </span>
+                                <div class="flex items-center gap-0.5 bg-slate-50 border border-slate-100 rounded-lg p-0.5 shrink-0">
+                                    <button onclick="editTask('${task.id}', event)" class="p-1 text-sky-600 hover:bg-sky-100 rounded transition-all" title="編輯事項">
+                                        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button onclick="deleteTask('${task.id}', event)" class="p-1 text-rose-500 hover:bg-rose-100 rounded transition-all" title="刪除事項">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <h4 class="text-xs font-bold transition-colors ${titleStyle}">${task.name}</h4>
+                        ${task.desc ? `<p class="text-[11px] text-slate-500 leading-relaxed">${task.desc}</p>` : ''}
+                    </div>
+
+                    <!-- 操作：延後/不要/一鍵排程 -->
+                    <div class="flex items-center justify-between pt-2 border-t border-sky-100 text-[11px] text-slate-400">
+                        <div class="flex items-center gap-2 w-full justify-between">
+                            <div class="flex items-center gap-2">
+                                ${task.status !== 'completed' ? `
+                                    <button onclick="changeTaskStatus('${task.id}', 'completed', event)" class="text-emerald-600 hover:text-emerald-500 font-bold flex items-center gap-0.5">
+                                        <i data-lucide="check" class="w-3.5 h-3.5"></i> 完成
+                                    </button>
+                                ` : `
+                                    <button onclick="changeTaskStatus('${task.id}', 'todo', event)" class="text-slate-500 hover:text-slate-600 font-bold flex items-center gap-0.5">
+                                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 重啟
+                                    </button>
+                                `}
+
+                                ${task.status !== 'completed' && task.status !== 'cancelled' ? `
+                                    <button onclick="openDelayModal('${task.id}', event)" class="text-amber-600 hover:text-amber-500 font-bold">
+                                        延後
+                                    </button>
+                                    <button onclick="changeTaskStatus('${task.id}', 'cancelled', event)" class="text-rose-500 hover:text-rose-400 font-bold">
+                                        取消
+                                    </button>
+                                ` : ''}
+                            </div>
+                            
+                            <!-- 📅 一鍵加入排程按鈕 -->
+                            ${task.status !== 'completed' && task.status !== 'cancelled' ? `
+                                <button onclick="scheduleTask('${task.id}', event)" class="text-sky-600 hover:text-sky-700 font-bold flex items-center gap-0.5 text-xs bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-100 shadow-sm transition-all hover:scale-105">
+                                    <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> 加入排程
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                if (task.status === 'todo') {
+                    lists.todo.appendChild(card);
+                    counts.todo++;
+                } else if (task.status === 'in_progress') {
+                    lists.in_progress.appendChild(card);
+                    counts.in_progress++;
+                } else if (task.status === 'completed') {
+                    lists.completed.appendChild(card);
+                    counts.completed++;
+                } else {
+                    lists.alternatives.appendChild(card);
+                    counts.alternatives++;
+                }
+            });
+
+            document.getElementById("count-todo").textContent = counts.todo;
+            document.getElementById("count-in-progress").textContent = counts.in_progress;
+            document.getElementById("count-completed").textContent = counts.completed;
+            document.getElementById("count-alternatives").textContent = counts.alternatives;
+
+            renderTasksByCategory(filtered);
+
+            initLucideIcons();
+        }
+
+        // 依分類顯示（看板下方）
+        function renderTasksByCategory(tasks) {
+            const wrap = document.getElementById("tasks-by-category");
+            if (!wrap) return;
+            wrap.innerHTML = "";
+
+            if (!tasks.length) {
+                wrap.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">目前沒有符合條件的事項。</div>`;
+                return;
+            }
+
+            const statusMap = {
+                todo: { label: '未開始', cls: 'bg-slate-100 text-slate-500' },
+                in_progress: { label: '進行中', cls: 'bg-sky-100 text-sky-700' },
+                completed: { label: '已完成', cls: 'bg-emerald-100 text-emerald-700' },
+                delayed: { label: '已延後', cls: 'bg-amber-100 text-amber-700' },
+                cancelled: { label: '已取消', cls: 'bg-rose-100 text-rose-600' }
+            };
+
+            const buildGroupCard = (name, color, items) => {
+                let rows = "";
+                items.forEach(t => {
+                    const st = statusMap[t.status] || statusMap.todo;
+                    const done = t.status === 'completed' || t.status === 'cancelled';
+                    rows += `
+                        <div class="flex items-center justify-between gap-2 bg-white border border-sky-100 rounded-lg px-2.5 py-1.5">
+                            <span class="text-[11px] font-bold text-slate-700 truncate ${done ? 'line-through text-slate-400' : ''}">${t.name}</span>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <span class="text-[8px] px-1.5 py-0.5 rounded font-bold ${st.cls}">${st.label}</span>
+                                <button onclick="editTask('${t.id}', event)" class="text-slate-400 hover:text-sky-600 p-0.5"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                                <button onclick="deleteTask('${t.id}', event)" class="text-slate-400 hover:text-rose-500 p-0.5"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+                const card = document.createElement("div");
+                card.className = "bg-white/60 border border-sky-100 rounded-2xl p-3 space-y-2";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between pb-2 border-b border-sky-100">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${color}"></span>
+                            <h4 class="text-xs font-bold text-slate-700">${name}</h4>
+                        </div>
+                        <span class="text-[10px] bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full font-bold">${items.length}</span>
+                    </div>
+                    <div class="space-y-1.5">${rows}</div>
+                `;
+                wrap.appendChild(card);
+            };
+
+            state.categories.forEach(cat => {
+                const items = tasks.filter(t => t.categoryId === cat.id);
+                if (items.length) buildGroupCard(cat.name, cat.color, items);
+            });
+
+            const known = new Set(state.categories.map(c => c.id));
+            const orphans = tasks.filter(t => !known.has(t.categoryId));
+            if (orphans.length) buildGroupCard("未分類", "#94a3b8", orphans);
+        }
+
+        // 一鍵加入排程實現
+        function scheduleTask(taskId, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            const task = state.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            openTaskModal(taskId);
+            // 預設切換為持續時間，並預填當前檢視日期
+            document.getElementById("task-modal-time-type").value = "range";
+            toggleTimeTypeFields();
+            
+            const startHour = "12:00";
+            const endHour = "13:00";
+            document.getElementById("task-modal-due").value = `${selectedCalendarDate}T${startHour}`;
+            document.getElementById("task-modal-due-end").value = `${selectedCalendarDate}T${endHour}`;
+            
+            showToast("📅 已啟動智慧排程！請設定持續起訖時間。");
+        }
+
+        function openTaskModal(taskId = null) {
+            updateCategoryDropdowns();
+            const modal = document.getElementById("modal-task");
+            const modalTitle = document.getElementById("task-modal-title");
+
+            if (taskId) {
+                const task = state.tasks.find(t => t.id === taskId);
+                if (!task) return;
+                modalTitle.textContent = "修改事項任務";
+                document.getElementById("task-modal-id").value = task.id;
+                document.getElementById("task-modal-name").value = task.name;
+                document.getElementById("task-modal-desc").value = task.desc || '';
+                document.getElementById("task-modal-category").value = task.categoryId;
+                document.getElementById("task-modal-priority").value = task.priority;
+                document.getElementById("task-modal-status").value = task.status;
+                
+                // 時間規劃模式對接
+                const timeType = task.timeType || 'single';
+                document.getElementById("task-modal-time-type").value = timeType;
+                document.getElementById("task-modal-due").value = task.due || '';
+                document.getElementById("task-modal-due-end").value = task.dueEnd || '';
+                document.getElementById("task-modal-duration").value = task.duration || '60';
+            } else {
+                modalTitle.textContent = "新增待辦事項";
+                document.getElementById("task-modal-id").value = "";
+                document.getElementById("task-modal-name").value = "";
+                document.getElementById("task-modal-desc").value = "";
+                document.getElementById("task-modal-category").selectedIndex = 0;
+                document.getElementById("task-modal-priority").value = "medium";
+                document.getElementById("task-modal-status").value = "todo";
+                
+                document.getElementById("task-modal-time-type").value = "single";
+                document.getElementById("task-modal-due").value = `${selectedCalendarDate}T12:00`;
+                document.getElementById("task-modal-due-end").value = `${selectedCalendarDate}T13:00`;
+                document.getElementById("task-modal-duration").value = "60";
+            }
+
+            toggleTimeTypeFields();
+            modal.classList.remove("hidden");
+            initLucideIcons();
+        }
+
+        function toggleTimeTypeFields() {
+            const type = document.getElementById("task-modal-time-type").value;
+            const startWrapper = document.getElementById("field-start-time-wrapper");
+            const endWrapper = document.getElementById("field-end-time-wrapper");
+            const durationWrapper = document.getElementById("field-duration-wrapper");
+            const labelStart = document.getElementById("label-start-time");
+
+            if (type === 'single') {
+                startWrapper.classList.remove("hidden");
+                endWrapper.classList.add("hidden");
+                durationWrapper.classList.add("hidden");
+                if (labelStart) labelStart.textContent = "日期與時間";
+            } else if (type === 'range') {
+                startWrapper.classList.remove("hidden");
+                endWrapper.classList.remove("hidden");
+                durationWrapper.classList.add("hidden");
+                if (labelStart) labelStart.textContent = "開始日期時間";
+            } else if (type === 'duration') {
+                startWrapper.classList.remove("hidden");
+                endWrapper.classList.add("hidden");
+                durationWrapper.classList.remove("hidden");
+                if (labelStart) labelStart.textContent = "開始日期時間";
+            }
+        }
+
+        function closeTaskModal() {
+            document.getElementById("modal-task").classList.add("hidden");
+        }
+
+        function saveTask() {
+            const id = document.getElementById("task-modal-id").value;
+            const name = document.getElementById("task-modal-name").value.trim();
+            const desc = document.getElementById("task-modal-desc").value.trim();
+            const categoryId = document.getElementById("task-modal-category").value || (state.categories[0] ? state.categories[0].id : 'cat-routine');
+            const priority = document.getElementById("task-modal-priority").value;
+            const status = document.getElementById("task-modal-status").value;
+            
+            const timeType = document.getElementById("task-modal-time-type").value;
+            const due = document.getElementById("task-modal-due").value;
+            const dueEnd = document.getElementById("task-modal-due-end").value;
+            const duration = document.getElementById("task-modal-duration").value;
+
+            if (!name) {
+                showToast("⚠️ 請先輸入事項名稱！");
+                return;
+            }
+
+            if (id) {
+                const task = state.tasks.find(t => t.id === id);
+                if (task) {
+                    task.name = name;
+                    task.desc = desc;
+                    task.categoryId = categoryId;
+                    task.priority = priority;
+                    task.status = status;
+                    task.timeType = timeType;
+                    task.due = due;
+                    task.dueEnd = dueEnd;
+                    task.duration = duration;
+                    if (status === 'completed' && task.status !== 'completed') {
+                        task.completedDate = new Date().toISOString().split('T')[0];
+                    }
+                }
+                showToast("✅ 時空事項已更新成功！");
+            } else {
+                const newTask = {
+                    id: 't-' + Date.now(),
+                    name: name,
+                    desc: desc,
+                    categoryId: categoryId,
+                    priority: priority,
+                    status: status,
+                    timeType: timeType,
+                    due: due,
+                    dueEnd: dueEnd,
+                    duration: duration,
+                    completedDate: status === 'completed' ? new Date().toISOString().split('T')[0] : null,
+                    originalDue: null
+                };
+                state.tasks.push(newTask);
+                showToast("🎉 時空事項新增成功！");
+            }
+
+            closeTaskModal();
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function changeTaskStatus(taskId, newStatus, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            const task = state.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = newStatus;
+                if (newStatus === 'completed') {
+                    task.completedDate = new Date().toISOString().split('T')[0];
+                    showToast("🏆 事項完成，紀錄一筆今日英雄成就！");
+                } else {
+                    task.completedDate = null;
+                }
+                saveStateToLocalStorage();
+                renderAll();
+            }
+        }
+
+        function deleteTask(taskId, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            state.tasks = state.tasks.filter(t => t.id !== taskId);
+            showToast("🗑️ 時空事項已被成功刪除！");
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function editTask(taskId, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            openTaskModal(taskId);
+        }
+
+        // ==========================================
+        // 延期模態框
+        // ==========================================
+        function openDelayModal(taskId, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            document.getElementById("delay-task-id").value = taskId;
+            document.getElementById("delay-custom-date").value = "";
+            document.getElementById("modal-delay").classList.remove("hidden");
+            initLucideIcons();
+        }
+
+        function closeDelayModal() {
+            document.getElementById("modal-delay").classList.add("hidden");
+        }
+
+        function quickSetDelayDate(days) {
+            const taskId = document.getElementById("delay-task-id").value;
+            const task = state.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const baseDate = task.due ? new Date(task.due) : new Date();
+            baseDate.setDate(baseDate.getDate() + days);
+
+            const tzoffset = baseDate.getTimezoneOffset() * 60000;
+            const localISO = (new Date(baseDate.getTime() - tzoffset)).toISOString().slice(0, 16);
+
+            task.originalDue = task.due;
+            task.due = localISO;
+            task.status = 'delayed';
+
+            showToast(`⏰ 成功將任務順延 ${days} 天。`);
+            closeDelayModal();
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function confirmTaskDelay() {
+            const taskId = document.getElementById("delay-task-id").value;
+            const customDate = document.getElementById("delay-custom-date").value;
+            const task = state.tasks.find(t => t.id === taskId);
+
+            if (!customDate) {
+                showToast("⚠️ 請選取自訂延期時間！");
+                return;
+            }
+
+            if (task) {
+                task.originalDue = task.due;
+                task.due = customDate;
+                task.status = 'delayed';
+                showToast(`⏰ 任務「${task.name}」已成功順延。`);
+            }
+
+            closeDelayModal();
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        // ==========================================
+        // 🎨 分類與色彩
+        // ==========================================
+        function openCategoryModal() {
+            renderCategoryListInModal();
+            document.getElementById("modal-category").classList.remove("hidden");
+            initLucideIcons();
+        }
+
+        function closeCategoryModal() {
+            document.getElementById("modal-category").classList.add("hidden");
+        }
+
+        function renderCategoryListInModal() {
+            const wrapper = document.getElementById("cat-list-wrapper");
+            if (!wrapper) return;
+            wrapper.innerHTML = "";
+
+            state.categories.forEach(cat => {
+                const item = document.createElement("div");
+                item.className = "flex items-center justify-between bg-sky-50/50 p-2.5 rounded-xl border border-sky-100";
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full" style="background-color: ${cat.color}"></span>
+                        <span class="text-xs font-bold text-sky-950">${cat.name}</span>
+                    </div>
+                    ${['cat-work', 'cat-study', 'cat-life', 'cat-routine'].includes(cat.id) ? `
+                        <span class="text-[8px] text-slate-400 font-bold uppercase">系統預設</span>
+                    ` : `
+                        <button onclick="deleteCategory('${cat.id}', event)" class="text-slate-400 hover:text-rose-500 transition-colors">
+                            <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                        </button>
+                    `}
+                `;
+                wrapper.appendChild(item);
+            });
+            initLucideIcons();
+        }
+
+        function addNewCategory() {
+            const name = document.getElementById("cat-modal-name").value.trim();
+            const color = document.getElementById("cat-modal-color").value;
+
+            if (!name) {
+                showToast("⚠️ 請先輸入分類標題！");
+                return;
+            }
+
+            const newCat = {
+                id: 'cat-' + Date.now(),
+                name: name,
+                color: color
+            };
+            state.categories.push(newCat);
+            document.getElementById("cat-modal-name").value = "";
+            showToast(`🎨 分類色彩「${name}」創立成功！`);
+            
+            renderCategoryListInModal();
+            updateCategoryDropdowns();
+            saveStateToLocalStorage();
+        }
+
+        function deleteCategory(catId, event) {
+            if (event) event.stopPropagation();
+            state.tasks.forEach(task => {
+                if (task.categoryId === catId) {
+                    task.categoryId = 'cat-routine'; 
+                }
+            });
+            state.categories = state.categories.filter(c => c.id !== catId);
+            showToast("🗑️ 自訂色彩標籤已刪除。");
+            
+            renderCategoryListInModal();
+            updateCategoryDropdowns();
+            saveStateToLocalStorage();
+        }
+
+        function updateCategoryDropdowns() {
+            const filterDropdown = document.getElementById("task-filter-category");
+            if (filterDropdown) {
+                const currentVal = filterDropdown.value;
+                filterDropdown.innerHTML = `<option value="all">所有分類</option>`;
+                state.categories.forEach(cat => {
+                    filterDropdown.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+                filterDropdown.value = currentVal;
+            }
+
+            const modalDropdown = document.getElementById("task-modal-category");
+            if (modalDropdown) {
+                modalDropdown.innerHTML = "";
+                state.categories.forEach(cat => {
+                    modalDropdown.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            }
+
+            const routineDropdown = document.getElementById("routine-modal-category");
+            if (routineDropdown) {
+                routineDropdown.innerHTML = "";
+                state.categories.forEach(cat => {
+                    routineDropdown.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            }
+        }
+
+        // ==========================================
+        // 📋 TAB 2: 日常例行公事
+        // ==========================================
+        function renderRoutines() {
+            const grid = document.getElementById("routine-grid");
+            if (!grid) return;
+            grid.innerHTML = "";
+
+            if (state.routines.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-20 text-slate-400 text-xs">
+                        目前日常習慣與循環課表庫是空的。
+                    </div>
+                `;
+                return;
+            }
+
+            state.routines.forEach(r => {
+                const cat = state.categories.find(c => c.id === r.categoryId) || { name: '日常例行', color: '#a855f7' };
+                const colorHex = cat.color;
+
+                const daysStr = (r.daysOfWeek && r.daysOfWeek.length > 0)
+                    ? r.daysOfWeek.map(d => ["日", "一", "二", "三", "四", "五", "六"][d]).join(', ')
+                    : "不固定重複天";
+
+                const card = document.createElement("div");
+                card.className = "bg-white border border-sky-100 rounded-2xl p-4 flex flex-col justify-between hover:border-sky-400 transition-all relative overflow-hidden shadow-sm";
+                card.innerHTML = `
+                    <div class="absolute top-0 left-0 w-1.5 h-full" style="background-color: ${colorHex}"></div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <span class="text-[9px] px-1.5 py-0.5 rounded font-bold" style="background-color: ${colorHex}15; color: ${colorHex}">
+                                ${cat.name}
+                            </span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase">Routine</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-800">${r.name}</h4>
+                        <p class="text-[10px] text-slate-500 font-medium">重複天: ${daysStr}</p>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-4 pt-3 border-t border-sky-100 text-[11px]">
+                        <button onclick="dispatchRoutineToTasksOnDate('${r.id}', '${selectedCalendarDate}', event)" class="bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-lg hover:bg-sky-500 hover:text-white transition-all font-bold flex items-center gap-1 shadow-sm">
+                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                            派發至當日任務
+                        </button>
+                        <button onclick="deleteRoutine('${r.id}', event)" class="text-slate-400 hover:text-rose-500 p-1" title="刪除此常用模板">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            initLucideIcons();
+        }
+
+        function openRoutineModal() {
+            updateCategoryDropdowns();
+            document.getElementById("routine-modal-name").value = "";
+            document.getElementById("routine-modal-priority").value = "medium";
+            temporaryRoutineDays = [];
+            const btns = document.querySelectorAll("#modal-routine button[type='button']");
+            btns.forEach(b => {
+                b.className = "py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-500 font-bold";
+            });
+
+            document.getElementById("modal-routine").classList.remove("hidden");
+            initLucideIcons();
+        }
+
+        function toggleRoutineDay(btn, dayNum) {
+            const index = temporaryRoutineDays.indexOf(dayNum);
+            if (index > -1) {
+                temporaryRoutineDays.splice(index, 1);
+                btn.className = "py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs text-slate-500 font-bold";
+            } else {
+                temporaryRoutineDays.push(dayNum);
+                btn.className = "py-1 bg-sky-500 text-white rounded text-xs font-black shadow-sm";
+            }
+        }
+
+        function closeRoutineModal() {
+            document.getElementById("modal-routine").classList.add("hidden");
+        }
+
+        function saveRoutine() {
+            const name = document.getElementById("routine-modal-name").value.trim();
+            const categoryId = document.getElementById("routine-modal-category").value;
+            const priority = document.getElementById("routine-modal-priority").value;
+
+            if (!name) {
+                showToast("⚠️ 請先輸入循環事項標題！");
+                return;
+            }
+
+            const newRoutine = {
+                id: 'r-' + Date.now(),
+                name: name,
+                categoryId: categoryId,
+                priority: priority,
+                daysOfWeek: [...temporaryRoutineDays]
+            };
+
+            state.routines.push(newRoutine);
+            showToast(`📋 已創立循環習慣課表模板：${name}`);
+            closeRoutineModal();
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function deleteRoutine(id, event) {
+            if (event) event.stopPropagation();
+            state.routines = state.routines.filter(r => r.id !== id);
+            showToast("🗑️ 常用事項模板已刪除。");
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function dispatchRoutineToTasksOnDate(routineId, targetDateStr, event) {
+            if (event) event.stopPropagation();
+            const routine = state.routines.find(r => r.id === routineId);
+            if (!routine) return;
+
+            const targetTime = new Date(`${targetDateStr}T12:00`);
+            const tzoffset = targetTime.getTimezoneOffset() * 60000;
+            const localISO = (new Date(targetTime.getTime() - tzoffset)).toISOString().slice(0, 16);
+
+            const newTask = {
+                id: 't-' + Date.now(),
+                name: routine.name,
+                desc: '日常例行快速生成事項',
+                categoryId: routine.categoryId,
+                priority: routine.priority || 'medium',
+                timeType: 'single',
+                due: localISO,
+                dueEnd: '',
+                duration: '60',
+                status: 'todo',
+                completedDate: null,
+                originalDue: null
+            };
+
+            state.tasks.push(newTask);
+            showToast(`➕ 例行「${routine.name}」已派發至當日待辦！`);
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        // ==========================================
+        // ⏳ TAB 3: 倒數 (保持純目標時限設計)
+        // ==========================================
+        function renderCountdowns() {
+            const grid = document.getElementById("countdown-grid");
+            if (!grid) return;
+            grid.innerHTML = "";
+
+            if (state.countdowns.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-20 text-slate-400 text-xs">
+                        目前沒有設定任何倒數項目。
+                    </div>
+                `;
+                return;
+            }
+
+            state.countdowns.forEach(cd => {
+                const card = document.createElement("div");
+                card.id = `cd-card-${cd.id}`;
+                card.className = "bg-white border border-sky-100 rounded-2xl p-5 space-y-4 hover:border-sky-400 transition-all relative overflow-hidden flex flex-col justify-between shadow-sm";
+                
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-start">
+                            <span class="text-[9px] bg-sky-50 text-sky-600 border border-sky-200 px-2.5 py-0.5 rounded-full font-bold uppercase">Countdown</span>
+                            <button onclick="deleteCountdown('${cd.id}', event)" class="text-slate-400 hover:text-rose-500" title="刪除此倒數">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-800">${cd.title}</h4>
+                        <p class="text-[10px] text-slate-400 font-mono">期限: ${cd.targetDate.replace('T', ' ')}</p>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-1.5 text-center font-mono py-1">
+                        <div class="bg-sky-50/50 p-2 rounded-xl border border-sky-100">
+                            <span class="block text-sm font-black text-slate-800" id="cd-days-${cd.id}">--</span>
+                            <span class="text-[8px] text-slate-400 uppercase font-black">Days</span>
+                        </div>
+                        <div class="bg-sky-50/50 p-2 rounded-xl border border-sky-100">
+                            <span class="block text-sm font-black text-slate-800" id="cd-hours-${cd.id}">--</span>
+                            <span class="text-[8px] text-slate-400 uppercase font-black">Hrs</span>
+                        </div>
+                        <div class="bg-sky-50/50 p-2 rounded-xl border border-sky-100">
+                            <span class="block text-sm font-black text-slate-800" id="cd-mins-${cd.id}">--</span>
+                            <span class="text-[8px] text-slate-400 uppercase font-black">Mins</span>
+                        </div>
+                        <div class="bg-sky-50/50 p-2 rounded-xl border border-sky-100">
+                            <span class="block text-sm font-black text-sky-600 animate-pulse" id="cd-secs-${cd.id}">--</span>
+                            <span class="text-[8px] text-slate-400 uppercase font-black">Secs</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            updateCountdownClocks();
+            initLucideIcons();
+        }
+
+        function updateCountdownClocks() {
+            state.countdowns.forEach(cd => {
+                const d = document.getElementById(`cd-days-${cd.id}`);
+                const h = document.getElementById(`cd-hours-${cd.id}`);
+                const m = document.getElementById(`cd-mins-${cd.id}`);
+                const s = document.getElementById(`cd-secs-${cd.id}`);
+
+                if (d && h && m && s) {
+                    const parsed = calculateTimeDifference(cd.targetDate);
+                    d.textContent = parsed.days;
+                    h.textContent = parsed.hours;
+                    m.textContent = parsed.minutes;
+                    s.textContent = parsed.seconds;
+                }
+            });
+        }
+
+        function calculateTimeDifference(targetIsoString) {
+            const difference = +new Date(targetIsoString) - +new Date();
+            let timeLeft = { days: '00', hours: '00', minutes: '00', seconds: '00' };
+
+            if (difference > 0) {
+                const d = Math.floor(difference / (1000 * 60 * 60 * 24));
+                const h = Math.floor((difference / (1000 * 60 * 60)) % 24);
+                const m = Math.floor((difference / 1000 / 60) % 60);
+                const s = Math.floor((difference / 1000) % 60);
+
+                timeLeft = {
+                    days: String(d).padStart(2, '0'),
+                    hours: String(h).padStart(2, '0'),
+                    minutes: String(m).padStart(2, '0'),
+                    seconds: String(s).padStart(2, '0')
+                };
+            }
+            return timeLeft;
+        }
+
+        function openCountdownModal() {
+            document.getElementById("countdown-modal-title").value = "";
+            document.getElementById("countdown-modal-date").value = "";
+            document.getElementById("modal-countdown").classList.remove("hidden");
+            initLucideIcons();
+        }
+
+        function closeCountdownModal() {
+            document.getElementById("modal-countdown").classList.add("hidden");
+        }
+
+        function saveCountdown() {
+            const title = document.getElementById("countdown-modal-title").value.trim();
+            const date = document.getElementById("countdown-modal-date").value;
+
+            if (!title || !date) {
+                showToast("⚠️ 請先設定倒數項目標題與目標時間！");
+                return;
+            }
+
+            const newCd = {
+                id: 'cd-' + Date.now(),
+                title: title,
+                targetDate: date
+            };
+
+            state.countdowns.push(newCd);
+            showToast(`⏳ 日程「${title}」已開始倒計時追蹤！`);
+            closeCountdownModal();
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function deleteCountdown(id, event) {
+            if (event) event.stopPropagation();
+            state.countdowns = state.countdowns.filter(c => c.id !== id);
+            showToast("🗑️ 倒數計時項目已被移除。");
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        // ==========================================
+        // 🍅 TAB 4: 極境專注鐘 (自訂與背景音樂)
+        // ==========================================
+        function initAudioPlayer() {
+            focusAudioElement = new Audio();
+            focusAudioElement.loop = true;
+            focusAudioElement.volume = state.focusTimer.volume;
+
+            const fileInput = document.getElementById("focus-audio-file");
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const fileUrl = URL.createObjectURL(file);
+                        state.focusTimer.audioUrl = fileUrl;
+                        state.focusTimer.audioTitle = file.name;
+                        
+                        document.getElementById("audio-file-name").textContent = `🎵 ${file.name}`;
+                        focusAudioElement.src = fileUrl;
+                        focusAudioElement.load();
+
+                        showToast(`🎵 成功讀入您的自訂本地音訊檔：${file.name}`);
+                        updateFocusUI();
+                        saveStateToLocalStorage();
+                    }
+                });
+            }
+        }
+
+        function applyCustomFocusDuration() {
+            const minInput = document.getElementById("focus-custom-minutes");
+            if (!minInput) return;
+            const minutes = parseInt(minInput.value) || 25;
+
+            if (minutes < 1 || minutes > 180) {
+                showToast("⚠️ 專注時長請設定於 1 至 180 分鐘內！");
+                return;
+            }
+
+            state.focusTimer.duration = minutes * 60;
+            state.focusTimer.timeLeft = minutes * 60;
+            state.focusTimer.isRunning = false;
+            clearInterval(focusInterval);
+
+            if (focusAudioElement) {
+                focusAudioElement.pause();
+            }
+
+            document.getElementById("focus-mode-badge").textContent = "CUSTOM FOCUS";
+            showToast(`🎯 已將專注鐘自訂時長套用為：${minutes} 分鐘`);
+            updateFocusUI();
+            saveStateToLocalStorage();
+        }
+
+        function updateFocusUI() {
+            const min = Math.floor(state.focusTimer.timeLeft / 60);
+            const sec = state.focusTimer.timeLeft % 60;
+            const timeStr = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+            const timerText = document.getElementById("focus-timer-text");
+            if (timerText) timerText.textContent = timeStr;
+
+            // 頂部常駐指示：切換到其他頁面時也能看到專注仍在計時
+            const runInd = document.getElementById("focus-running-indicator");
+            const runTime = document.getElementById("focus-running-time");
+            if (runInd && runTime) {
+                runTime.textContent = timeStr;
+                if (state.focusTimer.isRunning) {
+                    runInd.classList.remove("hidden");
+                    runInd.classList.add("flex");
+                } else {
+                    runInd.classList.add("hidden");
+                    runInd.classList.remove("flex");
+                }
+            }
+
+            const progressBar = document.getElementById("focus-progress-bar");
+            if (progressBar) {
+                const totalOffset = 659; 
+                const ratio = state.focusTimer.timeLeft / state.focusTimer.duration;
+                progressBar.style.strokeDashoffset = totalOffset - (totalOffset * ratio);
+            }
+
+            document.getElementById("current-playing-title").textContent = state.focusTimer.audioSourceType === 'none' ? '靜音專注' : state.focusTimer.audioTitle;
+            document.getElementById("focus-audio-url").value = state.focusTimer.audioSourceType === 'link' ? state.focusTimer.audioUrl : '';
+
+            const startText = document.getElementById("focus-start-text");
+            const startIcon = document.getElementById("focus-start-icon");
+            if (state.focusTimer.isRunning) {
+                startText.textContent = "暫停專注";
+                startIcon.setAttribute("data-lucide", "pause");
+            } else {
+                startText.textContent = "開始專注";
+                startIcon.setAttribute("data-lucide", "play");
+            }
+
+            initLucideIcons();
+        }
+
+        function setFocusMode(mode) {
+            state.focusTimer.isRunning = false;
+            clearInterval(focusInterval);
+            state.focusTimer.mode = mode;
+
+            const modes = {
+                focus: { duration: 25 * 60, btn: 'mode-btn-focus', badge: 'FOCUS' },
+                shortBreak: { duration: 5 * 60, btn: 'mode-btn-short', badge: 'SHORT BREAK' },
+                longBreak: { duration: 15 * 60, btn: 'mode-btn-long', badge: 'LONG BREAK' }
+            };
+
+            for (const key in modes) {
+                const btn = document.getElementById(modes[key].btn);
+                if (key === mode) {
+                    btn.className = "py-2 rounded-lg text-xs font-bold transition-all text-white bg-sky-500 shadow";
+                } else {
+                    btn.className = "py-2 rounded-lg text-xs font-bold transition-all text-sky-800 hover:text-sky-950";
+                }
+            }
+
+            state.focusTimer.duration = modes[mode].duration;
+            state.focusTimer.timeLeft = modes[mode].duration;
+            document.getElementById("focus-mode-badge").textContent = modes[mode].badge;
+            document.getElementById("focus-custom-minutes").value = modes[mode].duration / 60;
+
+            if (focusAudioElement) {
+                focusAudioElement.pause();
+            }
+
+            updateFocusUI();
+            saveStateToLocalStorage();
+        }
+
+        function toggleFocusTimer() {
+            if (state.focusTimer.isRunning) {
+                state.focusTimer.isRunning = false;
+                clearInterval(focusInterval);
+                if (focusAudioElement) {
+                    focusAudioElement.pause();
+                }
+                showToast("⏸️ 專注鐘已暫停倒計時。");
+            } else {
+                state.focusTimer.isRunning = true;
+                playFocusMusic();
+
+                focusInterval = setInterval(() => {
+                    if (state.focusTimer.timeLeft > 0) {
+                        state.focusTimer.timeLeft--;
+                        updateFocusUI();
+                    } else {
+                        state.focusTimer.isRunning = false;
+                        clearInterval(focusInterval);
+                        if (focusAudioElement) focusAudioElement.pause();
+                        triggerFocusEndBell();
+                    }
+                }, 1000);
+                showToast("🚀 專注電台伴隨已開啟，進入專注狀態！");
+            }
+            updateFocusUI();
+            saveStateToLocalStorage();
+        }
+
+        function resetFocusTimer() {
+            state.focusTimer.isRunning = false;
+            clearInterval(focusInterval);
+            state.focusTimer.timeLeft = state.focusTimer.duration;
+            if (focusAudioElement) {
+                focusAudioElement.pause();
+            }
+            showToast("🔄 專注時鐘狀態已重置。");
+            updateFocusUI();
+            saveStateToLocalStorage();
+        }
+
+        function playFocusMusic() {
+            if (state.focusTimer.audioSourceType === 'none') {
+                focusAudioElement.pause();
+                return;
+            }
+
+            if (!focusAudioElement.src || focusAudioElement.src !== state.focusTimer.audioUrl) {
+                focusAudioElement.src = state.focusTimer.audioUrl;
+            }
+
+            focusAudioElement.play().catch(err => {
+                console.warn("需要與頁面點擊交互解鎖音樂播放", err);
+            });
+        }
+
+        function triggerFocusEndBell() {
+            showToast("🔔 恭喜！您自訂設定的專注時段已圓滿達成。");
+            playSynthesizedTone(523.25, 0.5); 
+            setTimeout(() => playSynthesizedTone(523.25, 0.5), 200);
+
+            if (state.focusTimer.mode === 'focus') {
+                setFocusMode('shortBreak');
+            } else {
+                setFocusMode('focus');
+            }
+        }
+
+        function setPresetMusic(url, title) {
+            state.focusTimer.audioUrl = url;
+            state.focusTimer.audioTitle = title;
+            state.focusTimer.audioSourceType = 'link';
+            
+            document.querySelector("input[name='focus-audio-source'][value='link']").checked = true;
+            changeAudioSourceType('link');
+
+            focusAudioElement.src = url;
+            focusAudioElement.load();
+
+            if (state.focusTimer.isRunning) {
+                playFocusMusic();
+            }
+
+            showToast(`🎵 成功載入預置電台：「${title}」`);
+            updateFocusUI();
+            saveStateToLocalStorage();
+        }
+
+        function changeAudioSourceType(type) {
+            state.focusTimer.audioSourceType = type;
+            const linkWrapper = document.getElementById("audio-input-link-wrapper");
+            const fileWrapper = document.getElementById("audio-input-file-wrapper");
+
+            if (type === 'link') {
+                linkWrapper.classList.remove("hidden");
+                fileWrapper.classList.add("hidden");
+                state.focusTimer.audioUrl = document.getElementById("focus-audio-url").value || DEFAULT_STATE.focusTimer.audioUrl;
+                state.focusTimer.audioTitle = "自訂網路電台";
+            } else if (type === 'file') {
+                linkWrapper.classList.add("hidden");
+                fileWrapper.classList.remove("hidden");
+                state.focusTimer.audioTitle = "自訂上傳本地音樂";
+            } else {
+                linkWrapper.classList.add("hidden");
+                fileWrapper.classList.add("hidden");
+                focusAudioElement.pause();
+            }
+
+            updateFocusUI();
+            saveStateToLocalStorage();
+        }
+
+        function handleAudioUrlChange() {
+            const val = document.getElementById("focus-audio-url").value.trim();
+            if (val) {
+                state.focusTimer.audioUrl = val;
+                state.focusTimer.audioTitle = "自訂網址音樂";
+                focusAudioElement.src = val;
+                focusAudioElement.load();
+                if (state.focusTimer.isRunning) {
+                    playFocusMusic();
+                }
+                showToast("🎵 成功載入自訂音樂網址！");
+                updateFocusUI();
+                saveStateToLocalStorage();
+            }
+        }
+
+        function setAudioVolume(val) {
+            state.focusTimer.volume = val;
+            if (focusAudioElement) {
+                focusAudioElement.volume = val;
+            }
+            saveStateToLocalStorage();
+        }
+
+        // ==========================================
+        // 💤 TAB 5: 睡眠、自訂鬧鐘、計時與秒錶
+        // ==========================================
+        function renderAlarms() {
+            const list = document.getElementById("alarm-list-container");
+            if (!list) return;
+            list.innerHTML = "";
+
+            if (state.alarms.length === 0) {
+                list.innerHTML = `<span class="text-xs text-slate-400 block text-center py-6">無設定任何鬧鐘。</span>`;
+                return;
+            }
+
+            state.alarms.forEach(al => {
+                const item = document.createElement("div");
+                item.className = `flex items-center justify-between bg-white border ${
+                    al.active ? 'border-sky-300 shadow-sm' : 'border-sky-100'
+                } p-3 rounded-xl transition-all`;
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="alarm-clock" class="w-4.5 h-4.5 ${al.active ? 'text-sky-500' : 'text-slate-300'}"></i>
+                        <div>
+                            <span class="block text-xs font-bold font-mono text-slate-850">${al.time}</span>
+                            <span class="block text-[9px] text-slate-400 font-bold">${al.label || '提醒鬧鐘'}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" onchange="toggleAlarmActive('${al.id}', this, event)" class="sr-only peer" ${al.active ? 'checked' : ''}>
+                            <div class="w-8 h-4.5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:content-empty after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-sky-500"></div>
+                        </label>
+                        <button onclick="deleteAlarm('${al.id}', event)" class="text-slate-400 hover:text-rose-500 p-1" title="刪除鬧鐘">
+                            <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+            initLucideIcons();
+        }
+
+        function toggleAlarmActive(id, checkbox, event) {
+            if (event) event.stopPropagation();
+            const al = state.alarms.find(a => a.id === id);
+            if (al) {
+                al.active = checkbox.checked;
+                showToast(`⏰ 鬧鐘 ${al.time} 已${al.active ? '啟用' : '停用'}`);
+                saveStateToLocalStorage();
+                renderAll();
+            }
+        }
+
+        function deleteAlarm(id, event) {
+            if (event) event.stopPropagation();
+            state.alarms = state.alarms.filter(a => a.id !== id);
+            showToast("🗑️ 鬧鐘已被成功刪除。");
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function openAlarmModal() {
+            document.getElementById("alarm-modal-time").value = "08:00";
+            document.getElementById("alarm-modal-label").value = "";
+            document.getElementById("modal-alarm").classList.remove("hidden");
+            initLucideIcons();
+        }
+
+        function closeAlarmModal() {
+            document.getElementById("modal-alarm").classList.add("hidden");
+        }
+
+        function saveAlarm() {
+            const time = document.getElementById("alarm-modal-time").value;
+            const label = document.getElementById("alarm-modal-label").value.trim();
+
+            if (!time) {
+                showToast("⚠️ 請選取時間！");
+                return;
+            }
+
+            const newAl = {
+                id: 'al-' + Date.now(),
+                time: time,
+                label: label || '秘書喚醒提醒',
+                active: true
+            };
+
+            state.alarms.push(newAl);
+            showToast(`⏰ 鬧鐘 ${time} 已建立並啟用。`);
+            closeAlarmModal();
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function toggleSleepReminder() {
+            const enabled = document.getElementById("sleep-reminder-enable").checked;
+            state.sleepSettings.reminderEnabled = enabled;
+            showToast(`🌙 預期就寢提醒已${enabled ? '開啟' : '關閉'}`);
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        function updateSleepSettings() {
+            const sleepTime = document.getElementById("sleep-expected-time").value;
+            const wakeupTime = document.getElementById("sleep-wakeup-time").value;
+            
+            state.sleepSettings.expectedSleepTime = sleepTime;
+            state.sleepSettings.wakeupTime = wakeupTime;
+
+            showToast("🌙 睡眠與起床作息設定已更新。");
+            saveStateToLocalStorage();
+            renderAll();
+        }
+
+        // ==========================================
+        // ⏱️ 計時器與秒錶
+        // ==========================================
+        function updateTimerUI() {
+            const h = Math.floor(timerSecondsLeft / 3600);
+            const m = Math.floor((timerSecondsLeft % 3600) / 60);
+            const s = timerSecondsLeft % 60;
+            document.getElementById("timer-display").textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        function toggleTimerCountdown() {
+            const btn = document.getElementById("timer-control-btn");
+            if (timerIsRunning) {
+                timerIsRunning = false;
+                clearInterval(timerInterval);
+                btn.textContent = "繼續倒數";
+                btn.className = "flex-1 bg-sky-500 text-white text-xs font-black py-2.5 rounded-xl shadow-sm hover:bg-sky-600 transition-all";
+                showToast("⏸️ 倒數計時暫停。");
+            } else {
+                if (timerSecondsLeft === 0) {
+                    const hInput = parseInt(document.getElementById("timer-input-hours").value) || 0;
+                    const mInput = parseInt(document.getElementById("timer-input-mins").value) || 0;
+                    const sInput = parseInt(document.getElementById("timer-input-secs").value) || 0;
+                    timerSecondsLeft = hInput * 3600 + mInput * 60 + sInput;
+                }
+
+                if (timerSecondsLeft <= 0) {
+                    showToast("⚠️ 請先在輸入框設定好要倒計時的時分秒！");
+                    return;
+                }
+
+                timerIsRunning = true;
+                btn.textContent = "暫停計時";
+                btn.className = "flex-1 bg-amber-500 text-slate-900 text-xs font-black py-2.5 rounded-xl shadow-sm";
+
+                timerInterval = setInterval(() => {
+                    if (timerSecondsLeft > 0) {
+                        timerSecondsLeft--;
+                        updateTimerUI();
+                    } else {
+                        timerIsRunning = false;
+                        clearInterval(timerInterval);
+                        btn.textContent = "開始倒數";
+                        btn.className = "flex-1 bg-sky-500 text-white text-xs font-black py-2.5 rounded-xl shadow-sm hover:bg-sky-600 transition-all";
+                        triggerTimerAlarm();
+                    }
+                }, 1000);
+                showToast("⏱️ 計時器已開始倒數。");
+            }
+        }
+
+        function resetTimerCountdown() {
+            timerIsRunning = false;
+            clearInterval(timerInterval);
+            timerSecondsLeft = 0;
+            updateTimerUI();
+            const btn = document.getElementById("timer-control-btn");
+            if (btn) {
+                btn.textContent = "開始倒數";
+                btn.className = "flex-1 bg-sky-500 text-white text-xs font-black py-2.5 rounded-xl shadow-sm hover:bg-sky-600 transition-all";
+            }
+            document.getElementById("timer-input-hours").value = "";
+            document.getElementById("timer-input-mins").value = "";
+            document.getElementById("timer-input-secs").value = "";
+            showToast("🔄 計時器重置成功。");
+        }
+
+        function triggerTimerAlarm() {
+            showToast("🔔 倒數計時結束囉！");
+            playSynthesizedTone(880, 0.4); 
+            setTimeout(() => playSynthesizedTone(880, 0.4), 200);
+        }
+
+        function updateStopwatchUI() {
+            const minutes = Math.floor(stopwatchTime / 6000);
+            const seconds = Math.floor((stopwatchTime % 6000) / 100);
+            const centiseconds = stopwatchTime % 100;
+            document.getElementById("stopwatch-display").textContent = `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${String(centiseconds).padStart(2,'0')}`;
+        }
+
+        function toggleStopwatch() {
+            const btn = document.getElementById("stopwatch-control-btn");
+            if (stopwatchIsRunning) {
+                stopwatchIsRunning = false;
+                clearInterval(stopwatchInterval);
+                btn.textContent = "繼續計時";
+                btn.className = "flex-1 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-2.5 rounded-xl shadow-sm";
+                showToast("⏸️ 秒錶已暫停。");
+            } else {
+                stopwatchIsRunning = true;
+                btn.textContent = "暫停計時";
+                btn.className = "flex-1 bg-amber-500 text-slate-900 text-xs font-black py-2.5 rounded-xl shadow-sm";
+
+                stopwatchInterval = setInterval(() => {
+                    stopwatchTime++;
+                    updateStopwatchUI();
+                }, 10);
+            }
+        }
+
+        function lapStopwatch() {
+            if (stopwatchTime <= 0) return;
+            const minutes = Math.floor(stopwatchTime / 6000);
+            const seconds = Math.floor((stopwatchTime % 6000) / 100);
+            const centiseconds = stopwatchTime % 100;
+            const lapStr = `Lap ${stopwatchLaps.length + 1}: ${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${String(centiseconds).padStart(2,'0')}`;
+            stopwatchLaps.push(lapStr);
+
+            const container = document.getElementById("stopwatch-laps");
+            if (container) {
+                const el = document.createElement("div");
+                el.className = "py-1 border-b border-sky-100";
+                el.textContent = lapStr;
+                container.prepend(el);
+            }
+        }
+
+        function resetStopwatch() {
+            stopwatchIsRunning = false;
+            clearInterval(stopwatchInterval);
+            stopwatchTime = 0;
+            stopwatchLaps = [];
+            updateStopwatchUI();
+            const container = document.getElementById("stopwatch-laps");
+            if (container) container.innerHTML = "";
+            const btn = document.getElementById("stopwatch-control-btn");
+            if (btn) {
+                btn.textContent = "開始計時";
+                btn.className = "flex-1 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-2.5 rounded-xl shadow-sm";
+            }
+            showToast("🔄 秒錶重置成功。");
+        }
+
+        // ==========================================
+        // 🔊 音效合成與智慧提醒
+        // ==========================================
+        function checkAlarmsAndSleepReminder(now) {
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = now.getSeconds();
+            const currentTimeStr = `${hours}:${minutes}`;
+
+            if (seconds === 0 && !isRingingNow) {
+                const alarmMatch = state.alarms.find(a => a.active && a.time === currentTimeStr);
+                if (alarmMatch) {
+                    triggerAlarmRinging(alarmMatch);
+                }
+
+                if (state.sleepSettings.reminderEnabled && state.sleepSettings.expectedSleepTime === currentTimeStr) {
+                    triggerSleepReminderAlert();
+                }
+            }
+        }
+
+        function triggerSleepReminderAlert() {
+            showToast("🌙 預定就寢時間到了！該放鬆準備睡覺囉，祝您一夜好眠！");
+            playSynthesizedTone(329.63, 1.0); 
+            setTimeout(() => playSynthesizedTone(392.00, 1.0), 300); 
+        }
+
+        function triggerAlarmRinging(alarm) {
+            isRingingNow = true;
+            activeRingingAlarm = alarm;
+
+            document.getElementById("alarm-ringing-label").textContent = alarm.label || '提醒鬧鐘';
+            document.getElementById("alarm-ringing-time").textContent = alarm.time;
+            document.getElementById("modal-alarm-ringing").classList.remove("hidden");
+
+            ringToneInterval = setInterval(() => {
+                playSynthesizedTone(587.33, 0.2); 
+                setTimeout(() => playSynthesizedTone(659.25, 0.2), 200); 
+            }, 1000);
+        }
+
+        function dismissAlarmRinging() {
+            isRingingNow = false;
+            clearInterval(ringToneInterval);
+            activeRingingAlarm = null;
+            document.getElementById("modal-alarm-ringing").classList.add("hidden");
+            showToast("⏰ 鬧鐘已成功關閉。");
+        }
+
+        function playSynthesizedTone(frequency, duration) {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.warn("音訊播放受阻", e);
+            }
+        }
+
+        // ==========================================
+        // 📓 TAB 6: 日常成就日記本
+        // ==========================================
+        function selectJournalMood(mood) {
+            const dateStr = document.getElementById("journal-date").value;
+            if (!dateStr) return;
+
+            if (!state.journals[dateStr]) {
+                state.journals[dateStr] = { mood: '', text: '' };
+            }
+            state.journals[dateStr].mood = mood;
+
+            const moods = ['excellent', 'good', 'neutral', 'tired', 'bad'];
+            moods.forEach(m => {
+                const btn = document.getElementById(`mood-${m}`);
+                if (m === mood) {
+                    btn.className = "flex flex-col items-center justify-center p-2 rounded-xl border-2 border-sky-500 bg-sky-100 scale-105 transition-all shadow-sm";
+                } else {
+                    btn.className = "flex flex-col items-center justify-center p-2 rounded-xl border border-sky-100 bg-white hover:border-sky-500 transition-all";
+                }
+            });
+            saveStateToLocalStorage();
+        }
+
+        function loadJournalEntry() {
+            const dateStr = document.getElementById("journal-date").value;
+            if (!dateStr) return;
+
+            const entry = state.journals[dateStr] || { mood: '', text: '' };
+            selectJournalMood(entry.mood);
+            document.getElementById("journal-textarea").value = entry.text;
+
+            renderJournalAchievements(dateStr);
+        }
+
+        function renderJournalAchievements(dateStr) {
+            const list = document.getElementById("journal-achievement-list");
+            if (!list) return;
+            list.innerHTML = "";
+
+            const completedToday = state.tasks.filter(t => t.status === 'completed' && t.completedDate === dateStr);
+
+            if (completedToday.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-10 text-slate-400 text-[10px]">
+                        本日尚未發現有完成的事項紀錄。
+                        <p class="text-[9px] text-slate-400 mt-1">只要在待辦清單中將任務勾選為「完成」，成就日記便會自動捕捉呈現於此！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            completedToday.forEach(task => {
+                const cat = state.categories.find(c => c.id === task.categoryId) || { name: '日常例行', color: '#a855f7' };
+                const item = document.createElement("div");
+                item.className = "bg-white border border-sky-100 p-2.5 rounded-xl flex items-center justify-between shadow-sm";
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 truncate">
+                        <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${cat.color}"></span>
+                        <span class="text-[11px] font-bold text-slate-700 truncate">${task.name}</span>
+                    </div>
+                    <span class="text-[8px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded shrink-0">Done</span>
+                `;
+                list.appendChild(item);
+            });
+            initLucideIcons();
+        }
+
+        function saveJournalEntry() {
+            const dateStr = document.getElementById("journal-date").value;
+            const text = document.getElementById("journal-textarea").value.trim();
+
+            if (!dateStr) {
+                showToast("⚠️ 請先選取日記日期！");
+                return;
+            }
+
+            if (!state.journals[dateStr]) {
+                state.journals[dateStr] = { mood: '', text: '' };
+            }
+
+            state.journals[dateStr].text = text;
+            showToast(`📓 今日時空日記已保存！成果完美記錄。`);
+            saveStateToLocalStorage();
+        }
+
+        // ==========================================
+        // 🛠️ 輔助吐司通知
+        // ==========================================
+        function showToast(text) {
+            const toast = document.getElementById("toast");
+            const toastText = document.getElementById("toast-text");
+            if (!toast || !toastText) return;
+            
+            toastText.textContent = text;
+            toast.classList.remove("opacity-0", "translate-y-2", "pointer-events-none");
+            toast.classList.add("opacity-100", "translate-y-0");
+
+            setTimeout(() => {
+                toast.classList.remove("opacity-100", "translate-y-0");
+                toast.classList.add("opacity-0", "translate-y-2", "pointer-events-none");
+            }, 3000);
+        }
+
+        // ==========================================
+        // 🖥️ 全螢幕切換 / 看板收合（工具函數）
+        // ==========================================
+        function toggleFullscreen() {
+            const el = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+                showToast("🖥️ 已進入全螢幕，周檢視將以橫屏分欄呈現。");
+            } else if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        function toggleTaskColumn(key) {
+            const list = document.getElementById(`list-${key}`);
+            const chevron = document.getElementById(`chevron-${key}`);
+            if (!list) return;
+            const collapsed = list.classList.toggle("hidden");
+            if (chevron) chevron.style.transform = collapsed ? "rotate(180deg)" : "rotate(0deg)";
+        }
+
+        // 進入 / 離開全螢幕或旋轉螢幕時，重繪周檢視以套用橫屏分欄
+        window.addEventListener("fullscreenchange", () => {
+            if (state.activeTab === 'dashboard' && currentDashboardView === 'week') renderWeekView();
+        });
+        let __weekLayoutResizeTimer = null;
+        window.addEventListener("resize", () => {
+            clearTimeout(__weekLayoutResizeTimer);
+            __weekLayoutResizeTimer = setTimeout(() => {
+                if (state.activeTab === 'dashboard' && currentDashboardView === 'week') renderWeekView();
+            }, 200);
+        });
+
+        // ==========================================
+        // 全域掛載
+        // ==========================================
+        
+        
+        window.playFocusMusic = playFocusMusic;
+        window.toggleFullscreen = toggleFullscreen;
+        window.toggleTaskColumn = toggleTaskColumn;
+        window.selectDateFromWeek = selectDateFromWeek;
+        window.selectDateFromYear = selectDateFromYear;
+        window.openMonthFromYear = openMonthFromYear;
+        
+
+        
+        window.openTaskModal = openTaskModal;
+        window.closeTaskModal = closeTaskModal;
+        window.saveTask = saveTask;
+        window.editTask = editTask;
+        window.deleteTask = deleteTask;
+        window.changeTaskStatus = changeTaskStatus;
+        window.scheduleTask = scheduleTask;
+        window.toggleTimeTypeFields = toggleTimeTypeFields;
+        
+        window.openDelayModal = openDelayModal;
+        window.closeDelayModal = closeDelayModal;
+        window.quickSetDelayDate = quickSetDelayDate;
+        window.confirmTaskDelay = confirmTaskDelay;
+        
+        window.openRoutineModal = openRoutineModal;
+        window.toggleRoutineDay = toggleRoutineDay;
+        window.closeRoutineModal = closeRoutineModal;
+        window.saveRoutine = saveRoutine;
+        window.deleteRoutine = deleteRoutine;
+        window.dispatchRoutineToTasksOnDate = dispatchRoutineToTasksOnDate;
+        
+        window.openCountdownModal = openCountdownModal;
+        window.closeCountdownModal = closeCountdownModal;
+        window.saveCountdown = saveCountdown;
+        window.deleteCountdown = deleteCountdown;
+        
+        window.setFocusMode = setFocusMode;
+        window.applyCustomFocusDuration = applyCustomFocusDuration;
+        window.toggleFocusTimer = toggleFocusTimer;
+        window.resetFocusTimer = resetFocusTimer;
+        window.setPresetMusic = setPresetMusic;
+        window.changeAudioSourceType = changeAudioSourceType;
+        window.handleAudioUrlChange = handleAudioUrlChange;
+        window.setAudioVolume = setAudioVolume;
+        
+        window.toggleSleepReminder = toggleSleepReminder;
+        window.updateSleepSettings = updateSleepSettings;
+        window.openAlarmModal = openAlarmModal;
+
+        window.closeAlarmModal = closeAlarmModal;
+        window.saveAlarm = saveAlarm;
+        window.toggleAlarmActive = toggleAlarmActive;
+        window.deleteAlarm = deleteAlarm;
+        
+        window.toggleTimerCountdown = toggleTimerCountdown;
+        window.resetTimerCountdown = resetTimerCountdown;
+        window.toggleStopwatch = toggleStopwatch;
+        window.lapStopwatch = lapStopwatch;
+        window.resetStopwatch = resetStopwatch;
+        
+        window.selectJournalMood = selectJournalMood;
+        window.loadJournalEntry = loadJournalEntry;
+        window.saveJournalEntry = saveJournalEntry;
+        window.dismissAlarmRinging = dismissAlarmRinging;
+        window.openTaskAtTime = openTaskAtTime;
+        window.openTaskOnDate = openTaskOnDate;
+        window.resetToDemoData = resetToDemoData;
+    </script>
+</body>
+</html>
